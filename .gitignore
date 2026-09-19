@@ -1,0 +1,12 @@
+# generated outputs: vectors, CSVs, plots
+artifacts/
+
+# virtualenv and Python caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# editor / OS noise
+.DS_Store
+.vscode/

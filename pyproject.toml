@@ -1,0 +1,20 @@
+[project]
+name = "trait-vectors"
+version = "0.1.0"
+description = "Steering vectors in the residual stream of a small instruct model"
+readme = "README.md"
+authors = [
+    { name = "oskobx", email = "oskobx@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "datasets>=5.0.1",
+    "numpy>=2.5.3",
+    "pytest>=9.1.1",
+    "torch>=2.14.0",
+    "transformers>=5.17.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.15,<0.12.0"]
+build-backend = "uv_build"
