@@ -1,7 +1,7 @@
 """Load the model and generate text. Nothing here knows about hooks or traits."""
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedModel
 
 from trait_vectors import config
 
@@ -13,7 +13,12 @@ def load_model():
     L = model.config.num_hidden_layers and d = model.config.hidden_size.
     """
     tokenizer = AutoTokenizer.from_pretrained(config.MODEL_ID)
-    model = AutoModelForCausalLM.from_pretrained(config.MODEL_ID, dtype=config.DTYPE)
+    # The annotation is only for the type checker: transformers does not declare a
+    # return type on from_pretrained, so Pylance infers a class rather than an
+    # instance and flags model.to(...) / model.eval().
+    model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(
+        config.MODEL_ID, dtype=config.DTYPE
+    )
     model.to(config.DEVICE)
     model.eval()
     return model, tokenizer

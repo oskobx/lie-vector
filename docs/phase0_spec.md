@@ -60,7 +60,13 @@ Do them in order. Stop after each step and show me the output before continuing.
 
 ### Step 4: tests for the read hook (`tests/test_hooks.py`)
 1. For ℓ in {0, L//2, L−2}: hooked h_ℓ equals `output_hidden_states[ℓ+1]` (allclose, tolerance suitable for bfloat16).
-2. After the context manager exits, `len(block._forward_hooks) == 0` for every block.
+2. After the context manager exits, every hook we registered is gone: the per-block hook counts equal what they were before entering.
+
+   Not `== 0`. transformers 5.x implements `output_hidden_states=True` with its own forward hooks on every decoder block and never removes them, so after test 1 the model carries L library hooks. Comparing counts before/after tests the property we care about (our hooks are gone) without asserting anything about the library's.
+
+Two further tests, beyond the two above:
+3. Stored tensors have shape (1, n, d), dtype float32, device CPU, and no `grad_fn` — the contract the docstring promises.
+4. Hooks are removed when the `with` body raises. (This is the spec's Step 5 test 5, which applies equally to the read hook and costs nothing here.)
 
 ### Step 5: steering hook
 - `steer(model, layer, vector, alpha, r)`: context manager. The hook returns a modified output (returning a value from a forward hook replaces the module's output). It adds `alpha * r * v_hat`, with the vector moved to the model's device and dtype once, outside the hook.
