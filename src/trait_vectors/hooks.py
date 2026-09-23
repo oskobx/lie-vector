@@ -62,3 +62,52 @@ def read_activations(model, layers):
     finally:
         for handle in handles:
             handle.remove()
+
+
+@contextmanager
+def steer(model, layer, vector, alpha, r):
+    """Add alpha * r * v_hat to the output of block `layer`, at every position.
+
+    Usage:
+        with steer(model, 14, v, alpha=0.3, r=r_14):
+            text = generate(model, tokenizer, "Describe your commute.")
+
+    With v_hat = vector / ||vector||, the hook replaces h_layer by
+    h_layer + alpha * r * v_hat on every forward pass, at every position. So
+    alpha is dimensionless: with r = r_ell (the mean ||h_ell|| at the last
+    token over the extraction prompts), alpha = 1 is a shift the size of a
+    typical activation. See the steering-scale convention in the README.
+
+    Notes for the implementation:
+
+    - The hook must *return* the modified output; returning a value from a
+      forward hook replaces the module's output. If the block returned a
+      tuple, return a tuple with the new tensor first, so the block's
+      contract is preserved. Use _hidden_states to read it either way.
+    - Normalise the vector and move it to the model's device and dtype once,
+      here, outside the hook. The hook runs once per generated token, so it
+      should do nothing but the addition.
+    - v_hat has shape (d,) and h has shape (batch, n, d), so a plain `+`
+      broadcasts over batch and positions. During generation the hook sees
+      (1, n, d) on the first pass and (1, 1, d) afterwards (the KV cache means
+      later passes carry only the new token); broadcasting handles both, so
+      no special casing is needed to steer every token.
+    - One hook on one block, removed in a `finally` block as above.
+    """
+    v_hat = vector / vector.norm()
+    v_hat = v_hat.to(model.device, model.dtype)
+    shift = alpha * r * v_hat
+
+    def hook(module, inputs, output):
+        h = _hidden_states(output)
+        if isinstance(output, tuple):
+            return (h + shift, ) + output[1:]
+        else:     
+            return h + shift
+
+    handle = model.model.layers[layer].register_forward_hook(hook)
+
+    try:
+        yield
+    finally:
+        handle.remove()
