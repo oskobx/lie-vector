@@ -11,6 +11,8 @@ PyTorch hooks. Phase 0 (plumbing) is specified in `docs/phase0_spec.md`.
 uv sync
 uv run scripts/00_check_env.py   # prints torch version and MPS availability
 uv run scripts/01_generate.py    # loads the model and answers three questions
+uv run scripts/02_extract_sentiment.py   # extracts sentiment vectors -> artifacts/sentiment.pt
+uv run pytest                    # hook tests
 ```
 
 ## Conventions

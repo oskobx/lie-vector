@@ -24,24 +24,30 @@ def load_model():
     return model, tokenizer
 
 
-def generate(model, tokenizer, user_message, system=None):
-    """Greedy-decode a reply to user_message and return only the newly generated text.
+def build_inputs(tokenizer, user_message, system=None):
+    """Chat-template a user message into model inputs (input_ids, attention_mask).
 
-    The prompt is built with the tokenizer's chat template and
-    add_generation_prompt=True, so its last token is the position the model
-    predicts the first reply token from.
+    add_generation_prompt=True appends the assistant header, so position -1
+    is the token the model predicts its first reply token from. That is the
+    "last token" of the README conventions, used both for generation and
+    for reading activations in extract.py.
     """
     messages = []
     if system is not None:
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": user_message})
 
-    inputs = tokenizer.apply_chat_template(
+    return tokenizer.apply_chat_template(
         messages,
         add_generation_prompt=True,
         return_tensors="pt",
         return_dict=True,
-    ).to(model.device)
+    )
+
+
+def generate(model, tokenizer, user_message, system=None):
+    """Greedy-decode a reply to user_message and return only the newly generated text."""
+    inputs = build_inputs(tokenizer, user_message, system).to(model.device)
 
     with torch.inference_mode():
         output_ids = model.generate(
