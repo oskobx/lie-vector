@@ -88,8 +88,10 @@ A `Protocol` with three methods, kept minimal:
 - Print per layer: ‖v_ℓ‖ / r_ℓ, and cosine(v_ℓ, v_{ℓ+1}).
 
 ### Step 8: sanity sweep (`03_steer_sentiment.py`)
-- 10 neutral evaluation prompts, none about movies (e.g. "Describe your commute this morning.", "Tell me about the last meal you cooked."). Testing off-domain is deliberate: the vector should encode sentiment, not movie-ness.
-- Grid: layers {L//4, L//2, 3L//4} × α ∈ {−0.6, −0.3, −0.15, 0, 0.15, 0.3, 0.6}. The α range is a guess; widen or narrow after the first run.
+- 30 neutral evaluation prompts, none about movies, phrased as writing tasks about a topic (e.g. "Write a short paragraph about a morning commute."). Testing off-domain is deliberate: the vector should encode sentiment, not movie-ness.
+
+  Amended after the first run. The original design was 10 prompts asking about the model's own experience ("Describe your commute this morning."). 359 of 420 replies opened with an "As an AI language model, I don't have a physical body…" disclaimer, leaving little text to carry tone, and the DistilBERT scorer saturates (322 of 420 scores were < 0.1 or > 0.9), so means over 10 prompts had a noise band of about ±0.2 — the same band the random controls occupied. Writing-task prompts avoid the disclaimer; 30 prompts shrink the noise band by roughly 40%.
+- Grid: layers at {0.50, 0.65, 0.75, 0.85} × L (= {14, 18, 21, 24} for L = 28) × α ∈ {−0.6, −0.3, −0.15, 0, 0.15, 0.3, 0.6}. Amended from {L/4, L/2, 3L/4}: the extraction table shows ‖v_ℓ‖/r_ℓ jumping from ~0.02 to ~0.1 at ℓ ≈ 16, and the first sweep found nothing at L/4, so the grid concentrates on the second half. The α range is a guess; widen or narrow after the first run.
 - Scorer: `distilbert/distilbert-base-uncased-finetuned-sst-2-english` on CPU, P(positive) of the response.
 - **Random control:** repeat the sweep at the best layer with 3 random unit vectors, same α and r_ℓ.
 - Output: a CSV of (layer, α, direction, prompt, response, score), a plot of mean score vs. α per layer with the random controls overlaid, and a printed table of responses for one prompt across α.
