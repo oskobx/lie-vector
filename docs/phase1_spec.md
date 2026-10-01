@@ -7,11 +7,11 @@ Inherited from Phase 0 and not to be changed: hook API, `Trait` protocol, `extra
 ## 0. Decisions fixed for this phase
 
 - **Scenario source: templated and curated, not MASK.** MASK `provided_facts` (HF `cais/MASK`, CC BY 4.0) has the right structure but one pressure level and prompts up to ~1.8k characters, too long for a 1.5B model and incompatible with the graded design. We build our own scenarios (section 2) and keep MASK as an external validation set (section 2.4).
-- **Judge:** an API model stronger than the subject model. Config value `JUDGE_MODEL`; default to whichever provider Oskar already has a key for (Groq LLaMA-70B class or Claude Haiku class). Judge prompt is versioned; cache is keyed on (judge model, prompt version, sha256 of input). Same pattern as Songs Sense.
+- **Judge:** Anthropic API, model `claude-haiku-4-5` (config value `JUDGE_MODEL`). The key is in `.env` as `ANTHROPIC_API_KEY` (gitignored); load it with `python-dotenv`. `anthropic` and `python-dotenv` are already installed. Judge prompt is versioned; cache is keyed on (judge model, prompt version, sha256 of input). Same pattern as Songs Sense. The same provider and key are used for the scenario generator.
 - **Scenario generator:** an API model, through a script that stores the generator prompt and seed in the repo, so the candidate set is regenerable. Oskar curates by hand with a keep/delete CLI.
 - **Hand labels are the ground truth.** κ is reported against them. The judge never grades itself.
 - **GPU jobs run one at a time** (Phase 0 §4.10).
-- **New dependencies allowed:** the judge provider's SDK, `scikit-learn` (for κ), `pandas`. Nothing else without asking.
+- **New dependencies allowed:** `scikit-learn` (for κ), `pandas`. `anthropic` and `python-dotenv` are already in. Nothing else without asking.
 
 ## 1. Generic additions to the pipeline (trait-agnostic)
 

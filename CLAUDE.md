@@ -27,3 +27,7 @@ Current phase: **Phase 1** (data and scoring). The spec is `docs/phase1_spec.md`
 ## Project journal
 
 `docs/private/journal.md` (gitignored, local only) is the running record (timeline, decision log, per-phase results, interview question bank). When a phase closes, write the phase handoff to `docs/private/handoffs/phaseN_handoff_<date>.md` (gitignored) and then update the journal: timeline row, phase entry in the existing format, new decision-log rows, new interview questions. Keep journal entries short; detail belongs in the handoff.
+
+## API access
+
+The judge and the scenario generator use the Anthropic API, model `claude-haiku-4-5`. The key lives in `.env` as `ANTHROPIC_API_KEY` (gitignored); read it with `python-dotenv`, never hardcode it, never print it. Credits are prepaid and small, so every API call path must be cached and must fail loudly rather than retry forever.
