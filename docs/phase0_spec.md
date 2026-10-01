@@ -102,7 +102,18 @@ A `Protocol` with three methods, kept minimal:
 2. At some layer, mean P(positive) is monotone in α across the grid, with a spread of at least 0.3 between the extremes.
 3. Random directions show no monotone trend at the same scale.
 4. At the α values that satisfy (2), responses are still fluent English that address the prompt (checked by reading them). Record the α at which text degenerates; that bound is needed in Phase 2.
+
+   **Recorded 2026-09-30** (`scripts/04_degeneration_probe.py`, layer 18, r = 60.6, three prompts):
+   - |α| ≤ 0.6: fluent, on topic, tone shifts as intended.
+   - α = +1.0: grammatical but semantically broken ("well-lubidied tires", "sunshinies shine brightly"); still scored 1.000 by DistilBERT.
+   - α = −1.0: grammatical and on-theme but drifting off-prompt (autumn → "the atmosphere of winter… dangerous for our health").
+   - |α| = 1.5: positive side collapses to `$$$$` token runs; negative side becomes grammatical word salad unrelated to the prompt.
+   - |α| ≥ 2: positive side stays `$$`/bracket garbage; negative side switches to Chinese, then at −3 to a repetition loop.
+
+   So the usable range at this layer is |α| ≤ 0.6, with 1.0 as a hard ceiling, and degeneration beginning at |α| ≈ 1.5. Note the scorer is useless past the edge (it gave 1.000 to the broken +1.0 text and ~0.02 to `$$$$`), and the distinct-word fraction only caught the −3 repetition loop; reading the text was the real check. Phase 2 should stay within |α| ≤ 0.6 unless it re-probes at its own layer.
 5. A fresh clone plus `uv sync` plus the three scripts reproduces the plot.
+
+   **Checked 2026-10-01.** A copy of the working tree without `.venv/`, `artifacts/` or caches, after `uv sync`, reproduced `sentiment.pt` bit-for-bit and the full sweep's CSV row-for-row (1470/1470 responses and scores identical); the CSV and PNG files had identical SHA-256 hashes. So greedy decoding on MPS is deterministic across runs on this machine. Caveat: this was a working-tree copy, not a `git clone`, so it does not detect an uncommitted file.
 
 If (2) fails: check in order (a) hook actually modifies output (test 4), (b) α range too small (print ‖α r v̂‖ / ‖h‖), (c) dtype problems (rerun in float32), (d) extraction position (last token of the templated prompt, not of the raw sentence).
 

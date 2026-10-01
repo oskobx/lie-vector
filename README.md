@@ -13,6 +13,7 @@ uv run scripts/00_check_env.py   # prints torch version and MPS availability
 uv run scripts/01_generate.py    # loads the model and answers three questions
 uv run scripts/02_extract_sentiment.py   # extracts sentiment vectors -> artifacts/sentiment.pt
 uv run scripts/03_steer_sentiment.py     # steering sweep -> artifacts/sentiment_sweep.{csv,png}
+uv run scripts/04_degeneration_probe.py  # pushes alpha past the sweep's range; read the output
 uv run pytest                    # hook tests
 ```
 
