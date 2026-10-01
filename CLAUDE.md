@@ -2,7 +2,7 @@
 
 Research-style portfolio project. We extract directions in the residual stream of Qwen2.5-1.5B-Instruct and add them during generation to change behavior. No training anywhere, only forward passes with PyTorch hooks.
 
-Current phase: **Phase 0** (plumbing). The spec is `docs/phase0_spec.md`. Follow it exactly.
+Current phase: **Phase 1** (data and scoring). The spec is `docs/phase1_spec.md`. Follow it exactly. Phase 0 is closed; its spec is `docs/phase0_spec.md` and its handoff is in `docs/private/handoffs/`.
 
 ## How to work with me
 
@@ -12,7 +12,7 @@ Current phase: **Phase 0** (plumbing). The spec is `docs/phase0_spec.md`. Follow
 - Do not add dependencies beyond the spec without asking.
 - Do not run git commands. I commit myself through VS Code Source Control. Tell me when a step is a good commit point and suggest a commit message.
 - Keep terminal command explanations to one line each.
-- **`src/trait_vectors/hooks.py` is mine to write.** For spec steps 3 and 5, do not write the hook bodies. Write the tests (steps 4 and 5) and a skeleton with function signatures and docstrings, then let me fill in the bodies. Give hints if I ask, full solutions only if I ask explicitly.
+- `src/trait_vectors/hooks.py` is finished and tested; change it only if the spec requires it and say why.
 
 ## Technical rules
 
@@ -23,3 +23,7 @@ Current phase: **Phase 0** (plumbing). The spec is `docs/phase0_spec.md`. Follow
 - Nothing outside `src/trait_vectors/traits/` may refer to a specific trait (sentiment, lying, sycophancy).
 - Fixed seeds everywhere. Greedy decoding unless the spec says otherwise.
 - Generated files go in `artifacts/` (gitignored).
+
+## Project journal
+
+`docs/private/journal.md` (gitignored, local only) is the running record (timeline, decision log, per-phase results, interview question bank). When a phase closes, write the phase handoff to `docs/private/handoffs/phaseN_handoff_<date>.md` (gitignored) and then update the journal: timeline row, phase entry in the existing format, new decision-log rows, new interview questions. Keep journal entries short; detail belongs in the handoff.

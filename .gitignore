@@ -10,3 +10,4 @@ __pycache__/
 # editor / OS noise
 .DS_Store
 .vscode/
+docs/private/
