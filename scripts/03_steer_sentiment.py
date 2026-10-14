@@ -20,7 +20,7 @@ import torch
 from trait_vectors import config
 from trait_vectors.extract import load_vectors
 from trait_vectors.hooks import steer
-from trait_vectors.model import generate, load_model
+from trait_vectors.model import generate, load_model, steering_spec
 from trait_vectors.traits import sentiment
 
 ALPHAS = [-0.6, -0.3, -0.15, 0.0, 0.15, 0.3, 0.6]
@@ -36,23 +36,24 @@ LAYER_FRACTIONS = [0.50, 0.65, 0.75, 0.85]
 LAYER_COLOURS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]
 
 
-def sweep(model, tokenizer, trait, layer, vector, r, prompts, direction):
-    """One row per (alpha, prompt): steer, generate, score."""
+def sweep(model, tokenizer, trait, layer, vector, r, items, direction):
+    """One row per (alpha, item): steer, generate, score."""
     rows = []
     for alpha in ALPHAS:
         t0 = time.time()
+        spec = steering_spec(layer, vector, alpha, r)
         with steer(model, layer, vector, alpha, r):
-            for prompt in prompts:
-                response = generate(model, tokenizer, prompt)
+            for item in items:
+                response = generate(model, tokenizer, item.messages, steering=spec)
                 rows.append({
                     "layer": layer,
                     "alpha": alpha,
                     "direction": direction,
-                    "prompt": prompt,
+                    "prompt": item.messages[-1]["content"],
                     "response": response,
-                    "score": trait.score(prompt, response),
+                    "score": trait.score(item, response).value,
                 })
-        mean = sum(row["score"] for row in rows[-len(prompts):]) / len(prompts)
+        mean = sum(row["score"] for row in rows[-len(items):]) / len(items)
         print(f"  layer {layer:2d}  {direction:9}  alpha {alpha:+.2f}  mean score {mean:.3f}  ({time.time() - t0:.0f} s)",
               flush=True)  # flush so progress shows even when stdout is a pipe
     return rows
@@ -72,20 +73,20 @@ def main():
     torch.manual_seed(config.SEED)
     model, tokenizer = load_model()
     trait = sentiment.SentimentTrait()
-    prompts = trait.eval_prompts()
+    items = trait.eval_prompts()
 
     data = load_vectors(config.ARTIFACTS_DIR / "sentiment.pt")
     assert data["model_id"] == config.MODEL_ID, "vectors were extracted from a different model"
     L, d = model.config.num_hidden_layers, model.config.hidden_size
     layers = [round(f * L) for f in LAYER_FRACTIONS]
-    print(f"layers {layers}, {len(prompts)} prompts, alphas {ALPHAS}", flush=True)
+    print(f"layers {layers}, {len(items)} prompts, alphas {ALPHAS}", flush=True)
 
     # --- main sweep: the sentiment direction at each layer in the grid ---
     rows = []
     for layer in layers:
         idx = data["layers"].index(layer)
         rows += sweep(model, tokenizer, trait, layer, data["vectors"][idx], data["r"][idx].item(),
-                      prompts, "sentiment")
+                      items, "sentiment")
 
     # best layer = largest spread of mean score between the extreme alphas
     spreads = {}
@@ -104,7 +105,7 @@ def main():
     for k in range(N_RANDOM):
         gen = torch.Generator().manual_seed(config.SEED + 1 + k)
         random_vector = torch.randn(d, generator=gen)
-        rows += sweep(model, tokenizer, trait, best, random_vector, r_best, prompts, f"random{k}")
+        rows += sweep(model, tokenizer, trait, best, random_vector, r_best, items, f"random{k}")
 
     # --- CSV ---
     csv_path = config.ARTIFACTS_DIR / "sentiment_sweep.csv"
@@ -135,7 +136,7 @@ def main():
     print(f"wrote {png_path}")
 
     # --- responses for one prompt across alpha, at the best layer ---
-    prompt = prompts[0]
+    prompt = items[0].messages[-1]["content"]
     print(f"\nresponses at layer {best} for: {prompt!r}\n")
     for row in rows:
         if row["layer"] == best and row["direction"] == "sentiment" and row["prompt"] == prompt:

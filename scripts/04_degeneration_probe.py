@@ -11,7 +11,7 @@ import torch
 from trait_vectors import config
 from trait_vectors.extract import load_vectors
 from trait_vectors.hooks import steer
-from trait_vectors.model import generate, load_model
+from trait_vectors.model import generate, load_model, steering_spec
 from trait_vectors.traits import sentiment
 
 LAYER_FRACTION = 0.65  # the best layer of the main sweep (18 for L = 28)
@@ -28,7 +28,7 @@ def main():
     torch.manual_seed(config.SEED)
     model, tokenizer = load_model()
     trait = sentiment.SentimentTrait()
-    prompts = trait.eval_prompts()[:N_PROMPTS]
+    items = trait.eval_prompts()[:N_PROMPTS]
 
     data = load_vectors(config.ARTIFACTS_DIR / "sentiment.pt")
     assert data["model_id"] == config.MODEL_ID
@@ -39,12 +39,13 @@ def main():
 
     for alpha in ALPHAS:
         print(f"===== alpha {alpha:+.1f} =====")
+        spec = steering_spec(layer, vector, alpha, r)
         with steer(model, layer, vector, alpha, r):
-            for prompt in prompts:
-                response = generate(model, tokenizer, prompt)
-                score = trait.score(prompt, response)
+            for item in items:
+                response = generate(model, tokenizer, item.messages, steering=spec)
+                score = trait.score(item, response).value
                 print(f"[score {score:.3f}  len {len(response):3d}  distinct {distinct_word_fraction(response):.2f}] "
-                      f"{prompt}")
+                      f"{item.messages[-1]['content']}")
                 print(f"    {response}\n", flush=True)
 
 

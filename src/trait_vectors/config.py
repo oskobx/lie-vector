@@ -12,8 +12,9 @@ DTYPE = torch.bfloat16
 DEVICE = "mps"
 
 SEED = 0
-MAX_NEW_TOKENS = 60
+MAX_NEW_TOKENS = 60  # default for generate(); callers may pass their own
 
 # Repo root is two levels up from this file: src/trait_vectors/config.py
 ROOT = Path(__file__).resolve().parents[2]
 ARTIFACTS_DIR = ROOT / "artifacts"
+GEN_CACHE_DIR = ARTIFACTS_DIR / "gen_cache"  # one JSON file per cached generation

@@ -127,14 +127,15 @@ def test_steer_alpha_zero_is_identity(loaded, direction):
     """With alpha = 0 the generated text is identical to unsteered.
 
     Greedy decoding is deterministic, so any difference would mean the hook
-    changed the output even when asked to add nothing.
+    changed the output even when asked to add nothing. cache=False so both
+    replies really come from the model, not from the generation cache.
     """
     model, tokenizer, _ = loaded
     L = model.config.num_hidden_layers
 
-    unsteered = generate(model, tokenizer, PROMPT)
+    unsteered = generate(model, tokenizer, PROMPT, cache=False)
     with steer(model, L // 2, direction, alpha=0.0, r=1.0):
-        steered = generate(model, tokenizer, PROMPT)
+        steered = generate(model, tokenizer, PROMPT, cache=False)
 
     assert steered == unsteered
 

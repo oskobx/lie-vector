@@ -10,6 +10,7 @@ from datasets import load_dataset
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from trait_vectors import config
+from trait_vectors.traits.base import EvalItem, Score, split_by_id
 
 DATASET = "stanfordnlp/sst2"
 MIN_WORDS = 8
@@ -62,7 +63,7 @@ EVAL_PROMPTS = [
 
 
 class SentimentTrait:
-    """Satisfies the Trait protocol (see traits/base.py) by having its three methods."""
+    """Satisfies the Trait protocol (see traits/base.py) by having its four methods."""
 
     def __init__(self):
         self._scorer = None  # (tokenizer, model, index of POSITIVE); loaded on first score()
@@ -80,10 +81,26 @@ class SentimentTrait:
         )
 
     def eval_prompts(self):
-        return list(EVAL_PROMPTS)
+        """One item per prompt, condition "none" (sentiment has a single condition).
 
-    def score(self, prompt, response):
-        """P(positive) of the response under the DistilBERT SST-2 classifier."""
+        No system message, as in Phase 0, so the model sees exactly the same
+        input as before. (Qwen's chat template then inserts its default
+        system prompt; adding our own would change the replies.)
+        """
+        return [
+            EvalItem(
+                id=f"sentiment-{i:02d}",
+                condition="none",
+                messages=[{"role": "user", "content": prompt}],
+            )
+            for i, prompt in enumerate(EVAL_PROMPTS)
+        ]
+
+    def split(self, item):
+        return split_by_id(item.id)
+
+    def score(self, item, response):
+        """P(positive) of the response under the DistilBERT SST-2 classifier, as Score.value."""
         if self._scorer is None:
             tokenizer = AutoTokenizer.from_pretrained(SCORER)
             model = AutoModelForSequenceClassification.from_pretrained(SCORER)
@@ -94,7 +111,7 @@ class SentimentTrait:
         inputs = tokenizer(response, return_tensors="pt", truncation=True)
         with torch.inference_mode():
             logits = model(**inputs).logits  # shape (1, 2): scores for NEGATIVE, POSITIVE
-        return torch.softmax(logits, dim=-1)[0, positive].item()
+        return Score(value=torch.softmax(logits, dim=-1)[0, positive].item())
 
 
 def _as_prompt(sentence):
