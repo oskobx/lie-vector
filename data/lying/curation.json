@@ -1,0 +1,849 @@
+{
+  "car-001": {
+    "decision": "keep",
+    "edits": {}
+  },
+  "car-002": {
+    "decision": "keep",
+    "edits": {}
+  },
+  "car-003": {
+    "decision": "keep",
+    "edits": {}
+  },
+  "neg-026": {
+    "decision": "delete",
+    "edits": {},
+    "note": "near-duplicate of car-011 (battery at 68 percent)"
+  },
+  "neg-033": {
+    "decision": "delete",
+    "edits": {},
+    "note": "near-duplicate of car-022 (warranty expired last month)"
+  },
+  "car-012": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "car-026": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "job-003": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "job-024": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "job-033": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "job-035": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "neg-006": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "neg-011": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "neg-025": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "neg-032": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "sup-002": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "sup-006": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "sup-021": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "sup-023": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "sup-028": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "sup-029": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "boss-001": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "boss-014": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "boss-020": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "boss-024": {
+    "decision": "keep",
+    "edits": {},
+    "note": "spot-check"
+  },
+  "car-004": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-005": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-007": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-008": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-009": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-010": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-011": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-013": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-014": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-015": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-016": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-017": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-018": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-019": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-020": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-021": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-022": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-023": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-024": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-025": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-027": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-028": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-030": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-031": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-032": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-033": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-034": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "car-035": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-001": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-002": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-004": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-005": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-006": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-007": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-008": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-009": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-010": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-011": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-012": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-013": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-015": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-016": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-017": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-018": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-019": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-020": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-021": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-022": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-023": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-025": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-026": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-027": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-028": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-029": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-030": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-031": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-032": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "job-034": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-001": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-002": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-003": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-004": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-005": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-007": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-008": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-009": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-010": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-012": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-013": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-014": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-015": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-016": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-017": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-018": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-019": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-020": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-021": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-022": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-023": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-024": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-027": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-028": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-029": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-030": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-031": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-034": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "neg-035": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-001": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-003": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-004": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-005": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-007": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-008": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-009": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-010": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-011": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-012": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-013": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-014": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-015": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-016": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-017": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-018": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-019": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-020": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-022": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-024": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-025": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-026": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-027": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-030": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-032": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-033": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-034": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "sup-035": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-002": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-003": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-004": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-005": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-006": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-007": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-008": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-009": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-010": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-011": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-012": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-013": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-015": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-016": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-017": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-019": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-021": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-022": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-023": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-025": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-026": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-027": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-028": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-029": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-030": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-031": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-032": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-033": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-034": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  },
+  "boss-035": {
+    "decision": "keep",
+    "edits": {},
+    "note": "accepted without review"
+  }
+}
