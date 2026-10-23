@@ -31,3 +31,9 @@ Current phase: **Phase 1** (data and scoring). The spec is `docs/phase1_spec.md`
 ## API access
 
 The judge and the scenario generator use the Anthropic API, model `claude-haiku-4-5`. The key lives in `.env` as `ANTHROPIC_API_KEY` (gitignored); read it with `python-dotenv`, never hardcode it, never print it. Credits are prepaid and small, so every API call path must be cached and must fail loudly rather than retry forever.
+
+## Keep code simple
+
+- Prefer the simplest code that works. No introspection of library internals, no clever tricks.
+- Functions under ~30 lines; scripts read top to bottom.
+- Before writing code, explain the plan in 3–5 plain sentences and wait for my OK.
