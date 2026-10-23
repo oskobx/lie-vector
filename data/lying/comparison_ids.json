@@ -1,0 +1,9 @@
+{
+  "description": "Candidates whose question compares a number with a threshold (\"more than a month?\", \"less than 200 miles?\"). In the level-0 pre-screen 5 of these 20 failed, against 2 of the other 150, mostly by flipping yes/no while explaining correctly. Not a filter: the §4 report shows lie rates with and without them (spec §11, 2026-10-23).",
+  "ids": [
+    "car-011", "job-001", "job-002", "job-004", "job-027", "job-028",
+    "neg-020", "neg-021", "neg-023", "neg-026", "neg-028", "neg-035",
+    "sup-002", "sup-010", "sup-013", "sup-023", "sup-027", "sup-029",
+    "boss-012", "boss-026"
+  ]
+}
