@@ -11,6 +11,11 @@ MODEL_ID = "Qwen/Qwen2.5-1.5B-Instruct"
 DTYPE = torch.bfloat16
 DEVICE = "mps"
 
+# Anthropic API models (spec Phase 1 §0): the judge and the scenario generator.
+# The generator runs once, so it uses the strongest model (amendment 2026-10-22).
+JUDGE_MODEL = "claude-haiku-4-5"
+GENERATOR_MODEL = "claude-opus-5-5"
+
 SEED = 0
 MAX_NEW_TOKENS = 60  # default for generate(); callers may pass their own
 

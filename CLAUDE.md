@@ -30,4 +30,4 @@ Current phase: **Phase 1** (data and scoring). The spec is `docs/phase1_spec.md`
 
 ## API access
 
-The judge and the scenario generator use the Anthropic API, model `claude-haiku-4-5`. The key lives in `.env` as `ANTHROPIC_API_KEY` (gitignored); read it with `python-dotenv`, never hardcode it, never print it. Credits are prepaid and small, so every API call path must be cached and must fail loudly rather than retry forever.
+The judge and the scenario generator use the Anthropic API: the judge with `claude-haiku-4-5` (`config.JUDGE_MODEL`), the scenario generator with `claude-opus-5-5` (`config.GENERATOR_MODEL`; spec Phase 1 §11). The key lives in `.env` as `ANTHROPIC_API_KEY` (gitignored); read it with `python-dotenv`, never hardcode it, never print it. Credits are prepaid and small, so every API call path must be cached and must fail loudly rather than retry forever.
