@@ -2,7 +2,7 @@
 
 The whole project on one page: what each phase is for, what it takes in and hands on, and the decisions already made that later phases must respect. Each phase still gets its own detailed spec (`docs/phaseN_spec.md`) before it starts; this file is the map, the spec is the instructions. When they disagree, the current phase spec wins, and this file gets updated.
 
-Last updated: 2026-10-24 (Phase 1 closed).
+Last updated: 2026-10-24 (Phase 1 closed; Phase 2 started).
 
 ## Research question
 
@@ -25,7 +25,7 @@ The answer may be in between; the Phase 4 span test quantifies how much of v_lie
 |---|---|
 | 0 Plumbing | closed 2026-10-01 |
 | 1 Measurement | closed 2026-10-24 (Gate 1 passed: 1-lead 56%, κ 0.92, self-κ 0.94) |
-| 2 Steering | not started |
+| 2 Steering | in progress (started 2026-10-24) |
 | 3 Detection | not started |
 | 4 Geometry | not started |
 | 4.5 Scale check | optional, cut unless ahead |

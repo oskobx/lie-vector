@@ -27,9 +27,9 @@ class SycophancyTrait:
 
         P_plus starts the reply with the persona-matching (sycophantic) letter,
         P_minus with the other one, e.g. [{"role": "user", ...}, {"role": "assistant", "content": "(A"}].
-        Note: these are chats, not plain user strings as for sentiment; reading the
-        last token after a partial assistant turn needs extract.py to template them
-        with continue_final_message=True. That is a Phase 2 change (spec §10).
+        Note: these are chats, not plain user strings as for sentiment; model.build_inputs
+        leaves the partial assistant turn open, so the last token read is the letter
+        (Phase 2 spec §2.3).
         """
         data = json.loads(CAA_PATH.read_text())
         plus, minus = [], []

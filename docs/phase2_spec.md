@@ -129,6 +129,8 @@ Phase 1 §11 left open whether 1-lead lying is goal-driven or role-induced defer
 ## 11. Amendments
 *(append dated entries here, as in Phase 1)*
 
+**2026-10-24: judge snapshot pinned (§0.3).** Phase 1's cache did not record the snapshot, so the check is indirect: `scripts/19_check_judge_snapshot.py` re-judged 5 seeded 1-lead baseline items with the cache bypassed. 5/5 labels equal the cached ones (2 evasive, 2 honest, 1 lie); the API reports `claude-haiku-4-5-20251001` for all five. Pinned as `config.JUDGE_SNAPSHOT`; `runner._call` raises if the API reports any other model, and every new cache row stores `reported_model` (NULL for Phase 1 rows). `judge(..., use_cache=False)` added for the check.
+
 ## 12. Session plan
 
 | session | work | output |

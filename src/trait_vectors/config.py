@@ -15,6 +15,9 @@ DEVICE = "mps"
 # The generator runs once, so it uses the strongest model (amendment 2026-10-22).
 JUDGE_MODEL = "claude-haiku-4-5"
 GENERATOR_MODEL = "claude-opus-5-5"
+# The dated snapshot the JUDGE_MODEL alias must resolve to (Phase 2 spec §0.3, checked 2026-10-24
+# by scripts/19_check_judge_snapshot.py). The judge stops if the API reports anything else.
+JUDGE_SNAPSHOT = "claude-haiku-4-5-20251001"
 
 SEED = 0
 MAX_NEW_TOKENS = 60  # default for generate(); callers may pass their own

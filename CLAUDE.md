@@ -32,4 +32,4 @@ The whole project, all phases and the decisions later phases must respect, is in
 
 ## API access
 
-The judge and the scenario generator use the Anthropic API: the judge with `claude-haiku-4-5` (`config.JUDGE_MODEL`), the scenario generator with `claude-opus-5-5` (`config.GENERATOR_MODEL`; spec Phase 1 §11). The key lives in `.env` as `ANTHROPIC_API_KEY` (gitignored); read it with `python-dotenv`, never hardcode it, never print it. Credits are prepaid and small, so every API call path must be cached and must fail loudly rather than retry forever.
+The judge and the scenario generator use the Anthropic API: the judge with `claude-haiku-4-5` (`config.JUDGE_MODEL`), the scenario generator with `claude-opus-5-5` (`config.GENERATOR_MODEL`; spec Phase 1 §11). The key lives in `.env` as `ANTHROPIC_API_KEY` (gitignored); read it with `python-dotenv`, never hardcode it, never print it. Credits are prepaid; budget is not a constraint (topped up as needed), but every API call path must still be cached, for reproducibility, and must fail loudly rather than retry forever.

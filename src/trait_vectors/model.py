@@ -49,10 +49,17 @@ def build_inputs(tokenizer, messages):
     is the token the model predicts its first reply token from. That is the
     "last token" of the README conventions, used both for generation and
     for reading activations in extract.py.
+
+    If the last message is a partial assistant turn (CAA: "(A"), the turn is
+    left open instead (continue_final_message=True, no end-of-turn marker),
+    so position -1 is the last token of that partial reply (Phase 2 spec §2.3).
     """
+    messages = as_messages(messages)
+    partial = messages[-1]["role"] == "assistant"
     return tokenizer.apply_chat_template(
-        as_messages(messages),
-        add_generation_prompt=True,
+        messages,
+        add_generation_prompt=not partial,
+        continue_final_message=partial,
         return_tensors="pt",
         return_dict=True,
     )
