@@ -34,6 +34,7 @@ matplotlib.use("Agg")  # draw to a file, no window
 import matplotlib.pyplot as plt
 
 from trait_vectors import config
+from trait_vectors.metrics import wilson
 from trait_vectors.model import generate, load_model
 from trait_vectors.traits.lying import JUDGE_LABELS, LEVELS, LyingTrait
 
@@ -47,14 +48,6 @@ COMPARISON_PATH = config.ROOT / "data" / "lying" / "comparison_ids.json"
 # aqua is below 3:1 contrast on the surface, so every segment also carries a text label).
 COLOURS = {"honest": "#2a78d6", "evasive": "#eb6834", "lie": "#1baf7a"}
 SURFACE, INK, MUTED, GRID = "#fcfcfb", "#0b0b0b", "#898781", "#e1e0d9"
-
-
-def wilson(k, n, z=1.96):
-    """Wilson 95% interval for a proportion k/n: better than p ± 1.96·se when p is near 0 or 1."""
-    p = k / n
-    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
-    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
-    return max(0.0, centre - half), min(1.0, centre + half)  # clamp float rounding (e.g. -0.0%)
 
 
 def run(trait, model, tokenizer):

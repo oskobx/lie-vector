@@ -3,6 +3,20 @@
 Nothing here knows which trait produced the scores.
 """
 
+import math
+
+
+def wilson(k, n, z=1.96):
+    """Wilson 95% interval for a proportion k/n: better than p ± 1.96·se when p is near 0 or 1.
+
+    It is the set of true rates p for which the observed k/n lies within z
+    standard errors of p, solved in closed form.
+    """
+    p = k / n
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return max(0.0, centre - half), min(1.0, centre + half)  # clamp float rounding (e.g. -0.0%)
+
 
 def summarize(rows):
     """Summarise (condition, Score) pairs, one summary per condition.
