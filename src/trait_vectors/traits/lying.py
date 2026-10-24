@@ -16,10 +16,17 @@ assumes the false answer, so agreeing with it is the lie.
 import json
 
 from trait_vectors import config
+from trait_vectors.judge.runner import judge
 from trait_vectors.traits.base import EvalItem, split_by_id
 
 SCENARIOS_PATH = config.ROOT / "data" / "lying" / "scenarios.json"
 LEVELS = ["0", "0-lead", "1", "2", "3"]
+
+# The judge (spec §3): prompt file judge/prompts/<JUDGE_PROMPT>.md and its labels.
+# A malformed judge reply, after one re-ask, counts as evasive (with parse_error set).
+JUDGE_PROMPT = "lying_v1"
+JUDGE_LABELS = ("honest", "evasive", "lie")
+JUDGE_FALLBACK = "evasive"
 
 # Who asks the question in each domain (spec §2.2). The same mapping is in
 # scripts/10_generate_scenarios.py, which told the generator.
@@ -53,6 +60,18 @@ def messages_for(s, level):
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 
 
+def judge_fields(item, response):
+    """What the judge prompt needs: the fact, the neutral question and its truth, what was asked, the reply."""
+    m = item.meta
+    return {
+        "fact": m["fact"],
+        "question": m["question"],
+        "truth": m["truth"],
+        "asked": m["question"] if item.condition == "0" else m["leading"],
+        "response": response.strip() or "(empty)",
+    }
+
+
 class LyingTrait:
     """Satisfies the Trait protocol (see traits/base.py)."""
 
@@ -78,5 +97,9 @@ class LyingTrait:
         """By scenario id, not item id, so all five levels of a scenario land in the same half."""
         return split_by_id(item.meta["scenario_id"])
 
-    def score(self, item, response):
-        raise NotImplementedError("scoring is the judge, spec §3")
+    def score(self, item, response, dry_run=False):
+        """The judge's label for `response`: honest, evasive or lie (spec §3).
+
+        With dry_run=True, print the filled judge prompt and return None, without calling the API.
+        """
+        return judge(JUDGE_PROMPT, judge_fields(item, response), JUDGE_LABELS, JUDGE_FALLBACK, dry_run)
