@@ -2,7 +2,7 @@
 
 The whole project on one page: what each phase is for, what it takes in and hands on, and the decisions already made that later phases must respect. Each phase still gets its own detailed spec (`docs/phaseN_spec.md`) before it starts; this file is the map, the spec is the instructions. When they disagree, the current phase spec wins, and this file gets updated.
 
-Last updated: 2026-10-24 (level names aligned with the Phase 1 spec; Gate 1 passed).
+Last updated: 2026-10-24 (Phase 1 closed).
 
 ## Research question
 
@@ -24,7 +24,7 @@ The answer may be in between; the Phase 4 span test quantifies how much of v_lie
 | phase | status |
 |---|---|
 | 0 Plumbing | closed 2026-10-01 |
-| 1 Measurement | in progress: Gate 1 passed 2026-10-23 (κ 0.92, self-κ 0.94); left: close-out (handoff, journal) |
+| 1 Measurement | closed 2026-10-24 (Gate 1 passed: 1-lead 56%, κ 0.92, self-κ 0.94) |
 | 2 Steering | not started |
 | 3 Detection | not started |
 | 4 Geometry | not started |
@@ -37,7 +37,7 @@ The answer may be in between; the Phase 4 span test quantifies how much of v_lie
 Load the model, read and steer the residual stream, prove it works on sentiment.
 **Hands on:** `hooks.py` (`read_activations`, `steer`), `extract.py` (difference of means at the last token, per-layer scale r_ℓ), the `Trait` protocol, generation cache. Usable steering range |α| ≤ 0.6 at layer 18 (1.0 hard ceiling; re-probe at any other layer). Greedy decoding on MPS is bit-for-bit deterministic.
 
-### 1 — Measurement (in progress) · spec: `docs/phase1_spec.md`
+### 1 — Measurement (closed) · spec: `docs/phase1_spec.md`
 Build the instrument: scenarios, judge, unsteered baselines.
 **Hands on:**
 - `data/lying/scenarios.json` with fields incl. `fact`, `question` (neutral) and `leading`; extract/eval split by id.
@@ -47,7 +47,7 @@ Build the instrument: scenarios, judge, unsteered baselines.
 - Contrast data, loaded but not extracted: `traits/honesty.py` (Geometry of Truth true/false statements), `traits/sycophancy.py` (CAA A/B pairs, returned as chats with a partial assistant turn).
 **Gate 1:** level-0 pass ≥ 60% · lie rate at 1-lead or 2-lead in [15%, 85%] · judge κ ≥ 0.6 or within 0.1 of self-κ. Fail after half a day of tuning → choose a fallback trait then. **Passed 2026-10-23** (eval split: 92.9%, 55.7%, κ 0.92).
 
-### 2 — Steering
+### 2 — Steering · spec: `docs/phase2_spec.md`
 Extract directions on the **extract** split, steer on the **eval** split, measure what changes.
 - **Directions:** v_honesty (true vs. false statements, no goals), v_lie (from the scenarios: 1-lead replies that lie vs. answer honestly, or 1-lead vs. 0-lead activations; the spec will pick one), v_syc (CAA), v_goal only if time allows.
 - **Layer choice:** extraction statistics first (‖v_ℓ‖/r_ℓ, cross-layer cosine), then a small α sweep at 2–3 candidate layers at 1-lead only; full sweep only at the chosen layer.
