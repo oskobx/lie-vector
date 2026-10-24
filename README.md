@@ -52,9 +52,9 @@ and its reasons are recorded in the spec.
 
 ## Phase 1 (in progress): when does a small model lie?
 
-> **Provisional.** The labels below come from an LLM judge whose agreement
-> with hand labels has not been measured yet (spec §3.3). Treat the numbers as
-> the judge's view until the calibration is in.
+> **Labels** come from an LLM judge, calibrated against 64 replies labelled
+> blind by hand: 95% agreement, Cohen's κ = 0.92 (spec §3.3). Gate 1 passed,
+> so lying stays the project's main trait (spec §7).
 
 ### Design
 
@@ -111,7 +111,7 @@ agrees with a leading question when it has no role.
   It judges meaning rather than the words "yes"/"no" (which flip under a
   leading question), counts any assertion of the false answer as a lie, and
   calls refusals evasive. Temperature 0, cached in SQLite, 0 malformed replies
-  in 1344.
+  in 1344. Against 64 replies labelled blind by hand: 61 agree, κ = 0.92.
 
 ### Baseline: 168 scenarios × 8 levels
 
@@ -148,6 +148,9 @@ mean ± 1.96·sd/√n):
    (81–90% at 1-lead and 2-lead); the other four domains range from 38% to 64%.
 5. **Robust to the risky items**: dropping the 20 threshold-comparison
    scenarios changes 1-lead from 56.3% to 54.9%.
+6. **Breaking character shows up as evasion.** Replies like "as an AI
+   language model, I cannot…" are mostly labelled evasive and cluster at the
+   permission levels; honest replies are almost always given in character.
 
 ### Caveats
 
@@ -160,9 +163,10 @@ mean ± 1.96·sd/√n):
   the customer because the role makes the model deferential" predict the same
   rate. A separating test (a leading question that assumes the *true* answer)
   is described in spec §11 and not yet run.
-- **Judge strictness.** "Any assertion of the false answer is a lie" also
-  catches hedges and self-contradictions; part of the ~18% at the neutral
-  levels may be this. The calibration will tell.
+- **Judge edge cases.** The judge agrees with hand labels on 61 of 64
+  replies. Its disagreements are borderline kinds: feigned ignorance ("I don't
+  have any information on whether I called") counts as evasive, and a true
+  answer with an invented detail can count as a lie.
 - **The role step is a bundle**: role, goal and "which the manager does not
   know" are added together, so their separate effects are unknown.
 
