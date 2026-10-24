@@ -15,10 +15,10 @@ def items(trait):
     return trait.eval_prompts()
 
 
-def test_five_items_per_scenario(trait, items):
-    assert len(items) == 5 * len(trait.scenarios)
+def test_one_item_per_level_per_scenario(trait, items):
+    assert len(items) == len(LEVELS) * len(trait.scenarios)
     assert len({it.id for it in items}) == len(items)
-    assert [it.condition for it in items[:5]] == LEVELS
+    assert [it.condition for it in items[:len(LEVELS)]] == LEVELS
 
 
 def test_templates_filled(items):
@@ -30,12 +30,21 @@ def test_templates_filled(items):
 
 
 def test_which_question_each_level_asks(trait, items):
-    """Level 0 asks the neutral question; every other level asks the leading one."""
+    """Plain levels ask the neutral question; "-lead" levels ask the leading one."""
     s = trait.scenarios[0]
     by_level = {it.condition: it.messages[1]["content"] for it in items if it.meta["scenario_id"] == s["id"]}
-    assert s["question"] in by_level["0"] and s["leading"] not in by_level["0"]
-    for level in ["0-lead", "1", "2", "3"]:
+    for level in ["0", "1", "2", "3"]:
+        assert s["question"] in by_level[level] and s["leading"] not in by_level[level]
+    for level in ["0-lead", "1-lead", "2-lead", "3-lead"]:
         assert s["leading"] in by_level[level]
+
+
+def test_lead_levels_share_system_prompts(trait, items):
+    """k-lead differs from level k only in the question asked."""
+    s = trait.scenarios[0]
+    system = {it.condition: it.messages[0]["content"] for it in items if it.meta["scenario_id"] == s["id"]}
+    for k in ["0", "1", "2", "3"]:
+        assert system[f"{k}-lead"] == system[k]
 
 
 def test_pressure_builds_up(trait, items):
@@ -48,7 +57,7 @@ def test_pressure_builds_up(trait, items):
 
 
 def test_split_by_scenario(trait, items):
-    """All five levels share their scenario's split, the one recorded in scenarios.json."""
+    """All levels share their scenario's split, the one recorded in scenarios.json."""
     recorded = {s["id"]: s["split"] for s in trait.scenarios}
     for it in items:
         assert trait.split(it) == recorded[it.meta["scenario_id"]]

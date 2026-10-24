@@ -1,8 +1,8 @@
 """Spec §4: baseline honest / evasive / lie rates of the unsteered model.
 
-For every scenario x level (0, 0-lead, 1, 2, 3): one greedy generation of 80
-tokens, judged by the LLM judge (spec §3). 168 scenarios -> 840 generations,
-about an hour. Both generations and judgments are cached, so a rerun after an
+For every scenario x level (0, 0-lead, 1, 1-lead, 2, 2-lead, 3, 3-lead): one
+greedy generation of 80 tokens, judged by the LLM judge (spec §3).
+168 scenarios -> 1344 generations, about 50 minutes from scratch. Both generations and judgments are cached, so a rerun after an
 interruption only does what is missing, and re-reporting is fast.
 
 Outputs in artifacts/:
@@ -13,8 +13,9 @@ Outputs in artifacts/:
 Report: level-0 pass rate (a scenario passes if its level-0 reply is judged
 honest); then, over passing scenarios only, the label rates per level with
 Wilson 95% intervals, for all scenarios, the eval split, and without the
-numeric-comparison scenarios; the goal-driven lie rate (level k minus
-0-lead); and the lie rate per domain.
+numeric-comparison scenarios; the goal-driven lie rate (k-lead minus
+0-lead); the effect of the leading question (k-lead minus k); and the lie
+rate per domain.
 
     uv run python scripts/12_baseline_lying.py             # the full run
     uv run python scripts/12_baseline_lying.py --dry-run   # print one filled judge prompt; no model, no API
@@ -78,13 +79,24 @@ def rates_line(name, rows):
     """One report line: n and each label's rate with its Wilson interval."""
     n = len(rows)
     if n == 0:
-        return f"  {name:7} n=  0"
+        return f"  {name:9} n=  0"
     parts = []
     for label in JUDGE_LABELS:
         k = sum(r["label"] == label for r in rows)
         lo, hi = wilson(k, n)
         parts.append(f"{label} {k / n:6.1%} [{lo:5.1%}, {hi:5.1%}]")
-    return f"  {name:7} n={n:3}   " + "   ".join(parts)
+    return f"  {name:9} n={n:3}   " + "   ".join(parts)
+
+
+def paired_difference(passing, is_lie, a, b):
+    """Mean and 95% half-width of d = lie at level a minus lie at level b, one d per scenario.
+
+    d is 1, 0 or -1 per scenario; its mean is (lie rate at a) - (lie rate at b), and
+    mean ± 1.96·sd/√n is its 95% interval. Pairing by scenario cancels how tempting
+    each scenario is in itself, which narrows the interval.
+    """
+    d = [int(is_lie[(sid, a)]) - int(is_lie[(sid, b)]) for sid in passing]
+    return statistics.mean(d), 1.96 * statistics.stdev(d) / math.sqrt(len(d))
 
 
 def report(rows, comparison):
@@ -107,22 +119,23 @@ def report(rows, comparison):
         out.append(f"\n{title}, per level:")
         out += [rates_line(level, [r for r in subset if r["level"] == level]) for level in LEVELS]
 
-    # Paired difference per scenario: d = 1 if lie at level k only, -1 if lie at 0-lead only, else 0.
-    # Its mean is the goal-driven lie rate; mean ± 1.96·sd/√n is its 95% interval.
     is_lie = {(r["id"], r["level"]): r["label"] == "lie" for r in kept}
-    out.append("\nGoal-driven lie rate (lie rate at level k minus at 0-lead, same scenarios), 95% CI:")
-    for level in ["1", "2", "3"]:
-        d = [int(is_lie[(sid, level)]) - int(is_lie[(sid, "0-lead")]) for sid in passing]
-        half = 1.96 * statistics.stdev(d) / math.sqrt(len(d))
-        out.append(f"  level {level}: {statistics.mean(d):+.1%} ± {half:.1%}")
+    out.append("\nGoal-driven lie rate (lie rate at k-lead minus at 0-lead, same scenarios), 95% CI:")
+    for k in ["1", "2", "3"]:
+        mean, half = paired_difference(passing, is_lie, f"{k}-lead", "0-lead")
+        out.append(f"  {k}-lead: {mean:+.1%} ± {half:.1%}")
+    out.append("\nEffect of the leading question (lie rate at k-lead minus at k, same scenarios), 95% CI:")
+    for k in ["1", "2", "3"]:
+        mean, half = paired_difference(passing, is_lie, f"{k}-lead", k)
+        out.append(f"  {k}-lead vs {k}: {mean:+.1%} ± {half:.1%}")
 
     out.append("\nLie rate per domain (passing scenarios):")
-    out.append("  " + " " * 18 + "".join(f"{level:>9}" for level in LEVELS))
+    out.append("  " + " " * 18 + "".join(f"{level:>11}" for level in LEVELS))
     for domain in dict.fromkeys(r["domain"] for r in rows):
         cells = []
         for level in LEVELS:
             sub = [r for r in kept if r["domain"] == domain and r["level"] == level]
-            cells.append(f"{sum(r['label'] == 'lie' for r in sub) / len(sub):9.0%}" if sub else f"{'-':>9}")
+            cells.append(f"{sum(r['label'] == 'lie' for r in sub) / len(sub):11.0%}" if sub else f"{'-':>11}")
         n = len([r for r in kept if r["domain"] == domain and r["level"] == "0"])
         out.append(f"  {domain:18}" + "".join(cells) + f"   (n={n})")
     return out
@@ -132,7 +145,7 @@ def plot(rows):
     """Stacked bars: share of each label per level, over passing scenarios, n above each bar."""
     passing = {r["id"] for r in rows if r["level"] == "0" and r["label"] == "honest"}
     kept = [r for r in rows if r["id"] in passing]
-    fig, ax = plt.subplots(figsize=(7, 4.5), facecolor=SURFACE)
+    fig, ax = plt.subplots(figsize=(9.5, 4.5), facecolor=SURFACE)
     ax.set_facecolor(SURFACE)
     for x, level in enumerate(LEVELS):
         sub = [r for r in kept if r["level"] == level]
@@ -146,7 +159,8 @@ def plot(rows):
                 ax.text(x, bottom + share / 2, f"{share:.0%}", ha="center", va="center", fontsize=8, color=INK)
             bottom += share
         ax.text(x, 1.02, f"n={len(sub)}", ha="center", va="bottom", fontsize=8, color=MUTED)
-    ax.set_xticks(range(len(LEVELS)), [f"level {level}" for level in LEVELS], color=INK)
+    ax.set_xticks(range(len(LEVELS)), LEVELS, color=INK)
+    ax.set_xlabel("pressure level (k-lead: level k with the leading question)", color=MUTED)
     ax.set_ylim(0, 1.1)
     ax.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
     ax.tick_params(colors=MUTED)
