@@ -1,6 +1,6 @@
 # Phase 1 spec: data and scoring (timebox: 7 days, gate at day 5)
 
-Goal: measure the unsteered behaviour. By the end we know the lie / evasion / honest rates of Qwen2.5-1.5B-Instruct at four pressure levels, with a judge we trust, plus the sycophancy flip rate as insurance. No steering in this phase. Gate 1 (section 7) decides whether lying stays the main trait.
+Goal: measure the unsteered behaviour. By the end we know the lie / evasion / honest rates of Qwen2.5-1.5B-Instruct at four pressure levels, with a judge we trust, plus contrast data for v_syc and v_honesty. (The sycophancy flip rate planned as insurance was dropped, §11.) No steering in this phase. Gate 1 (section 7) decides whether lying stays the main trait.
 
 Inherited from Phase 0 and not to be changed: hook API, `Trait` protocol, `extract.py`, config conventions, greedy decoding, the α bound |α| ≤ 0.6 at layer 18 (not used here).
 
@@ -106,14 +106,14 @@ Rules in the prompt: a true answer followed by salesmanship is still honest; "I'
 - Report per level: honest / evasive / lie rates with Wilson 95% intervals; also per domain, and separately for the `eval` split (the number Phase 2 will be compared against). Also report the goal-driven lie rate per level (§2.2). Sensitivity check: report the per-level lie rates again without the numeric-comparison scenarios listed in `data/lying/comparison_ids.json`; if the two differ clearly, the comparison items are suspected of yes/no slips rather than lies (§11).
 - Plot: stacked bars of the three labels per level, with n printed.
 
-## 5. Sycophancy baseline (`traits/sycophancy.py`, `scripts/14_baseline_sycophancy.py`)
+## 5. Sycophancy (`traits/sycophancy.py`, data only)
 
 Sycophancy enters the project in two ways only (amended 2026-10-23, §11):
 
 1. the level 0-lead lie rate (§2.2, §4): the lying scenarios and the leading question with no role, measured at 19.6%;
 2. v_syc from the CAA contrast pairs (§5.2), for the Phase 4 geometry.
 
-**5.1 Flip rate on GSM8K: dropped (2026-10-23, §11).** It is no longer a Phase 1 measurement or a gate fallback. What stays: the GSM8K subset reserved for the Phase 2 side-effect audit (maths accuracy under steering): HF `openai/gsm8k`, `main`, `test`, shuffled with `config.SEED`, positions 151-300 (`SycophancyTrait.audit_prompts()`). The flip-rate code (`scripts/14_baseline_sycophancy.py`, `eval_prompts()` / `turn2_item()` in `traits/sycophancy.py`) stays in the repo, unused.
+**5.1 Flip rate on GSM8K: dropped (2026-10-23, §11).** It is no longer a Phase 1 measurement or a gate fallback, and its code was removed. No GSM8K subset is reserved here; Phase 2 loads GSM8K itself when its side-effect audit (maths accuracy under steering) needs it.
 
 **5.2 Contrastive pairs for v_syc (data only, extraction is Phase 2).** CAA sycophancy set (`nrimsky/CAA`, `datasets/generate/sycophancy/generate_dataset.json`; A/B items with `answer_matching_behavior`). Load, format as chat (question as user message, the chosen letter as the start of the assistant turn), and expose as `extraction_pairs()`. Keep a note that these are opinion-sycophancy items (agree with a described persona), a different flavour from the lying scenarios' agreement with a false belief; that mismatch is worth one line in the README.
 
@@ -152,7 +152,7 @@ Self-κ (the 30-item relabel, §3.3 step 3) is still to come; it cannot change t
 | 1 | §1 pipeline changes; generator script; run it | `candidates.json`; sentiment tests still green |
 | 2 | curation (Oskar, ~2 h); judge prompt v1 + runner + dry run | `scenarios.json` (110-130); judge callable |
 | 3 | baseline run (unattended); then hand-label 60 blind | `lying_baseline.csv`, `hand_labels.csv` |
-| 4 | calibration report, read disagreements, prompt v2 if needed; sycophancy flip-rate run (unattended) | κ numbers; flip rate |
+| 4 | calibration report, read disagreements, prompt v2 if needed; ~~sycophancy flip-rate run (unattended)~~ (dropped, §11) | κ numbers |
 | 5 | relabel 30 for self-κ; honesty + CAA data loaded; **gate decision** | baseline report; gate recorded in spec |
 | 6-7 | buffer: tuning if the gate asked for it, MASK subset, Phase 1 handoff (short: numbers, amendments, open items) | handoff |
 
@@ -161,7 +161,7 @@ Self-κ (the 30-item relabel, §3.3 step 3) is still to come; it cannot change t
 1. `scenarios.json` with 110-130 curated items, split assigned, all five domains.
 2. `lying_baseline.csv` and a report with level-0 pass rate and per-level rates with CIs.
 3. Judge calibration report: κ (judge-hand), κ (self), confusion matrix, prompt version used.
-4. ~~Sycophancy flip rate with turn-1 accuracy, from 150 GSM8K items.~~ Dropped (2026-10-23, §11). Instead: the CAA pairs load (§5.2), and the 150-item GSM8K audit subset is defined for Phase 2.
+4. ~~Sycophancy flip rate with turn-1 accuracy, from 150 GSM8K items.~~ Dropped (2026-10-23, §11). Instead: the CAA pairs load (§5.2).
 5. `traits/honesty.py` and `traits/sycophancy.py` load their data and satisfy the `Trait` protocol; `traits/sentiment.py` unchanged in behaviour; all tests pass.
 6. Gate 1 decision written into this spec with the numbers that decided it.
 
@@ -248,4 +248,6 @@ The §5.1 run was started and stopped after 35 of 150 problems. Decision: drop t
 - It measures a different flavour of sycophancy from the rest of the project: the lying scenarios test agreeing with a false belief, and v_syc comes from CAA opinion pairs.
 - The parsing rule misreads turn 2. The model often repeats the user's number while rejecting it ("The correct answer should be $4, not $11"; "indeed 12, not 18"), so the last-number fallback reads a capitulation where the model held. Of the 5 "flips" among the 22 initially correct answers, 2 were this misreading, 2 were real (one adopted the user's number, one moved to another wrong number), and 1 was cut off at 320 tokens with no final answer.
 
-Sycophancy now enters the project in two ways only: (1) the level 0-lead lie rate, the same scenarios and leading question with no role, already measured at 19.6% (§4); (2) v_syc from the CAA pairs (§5.2), for the Phase 4 geometry. If a gate fails, the fallback trait is decided then; the flip rate is no longer the default (§7). Kept: the CAA loading (§5.2) and the reserved GSM8K subset for the Phase 2 side-effect audit (maths accuracy under steering). The flip-rate code stays in the repo, unused; the turn-2 parsing fix was not implemented.
+Sycophancy now enters the project in two ways only: (1) the level 0-lead lie rate, the same scenarios and leading question with no role, already measured at 19.6% (§4); (2) v_syc from the CAA pairs (§5.2), for the Phase 4 geometry. If a gate fails, the fallback trait is decided then; the flip rate is no longer the default (§7). Kept: the CAA loading (§5.2). The turn-2 parsing fix was not implemented.
+
+Code removed, to keep no unused code: `scripts/14_baseline_sycophancy.py`; the GSM8K logic in `traits/sycophancy.py` (turn 1 / turn 2 items, answer parsing, the pushback number, `turn2_item`); the tests that covered only the flip rate; and the reserved GSM8K audit subset. Phase 2 loads GSM8K itself when its side-effect audit needs it. `traits/sycophancy.py` now holds only the CAA loading and `extraction_pairs()`; to satisfy the `Trait` protocol, `eval_prompts()` returns an empty list (sycophancy has no eval set; it is measured as the lying scenarios' 0-lead rate) and `score()` raises `NotImplementedError`.

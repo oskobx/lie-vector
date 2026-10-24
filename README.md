@@ -190,7 +190,7 @@ uv run scripts/11_curate.py               # keep/delete/edit CLI -> data/lying/s
 uv run scripts/12_baseline_lying.py       # 1344 replies, judged -> artifacts/lying_baseline.{csv,txt,png}
 uv run scripts/13_calibrate_judge.py label|relabel|report   # judge vs hand labels, Cohen's kappa
 
-uv run pytest                             # 25 tests: hooks, pipeline, lying trait, judge
+uv run pytest                             # 26 tests: hooks, pipeline, lying trait, judge, sycophancy data
 ```
 
 Generations and judgments are cached, so rerunning a script only computes what
