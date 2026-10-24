@@ -53,8 +53,9 @@ and its reasons are recorded in the spec.
 ## Phase 1 (in progress): when does a small model lie?
 
 > **Labels** come from an LLM judge, calibrated against 64 replies labelled
-> blind by hand: 95% agreement, Cohen's κ = 0.92 (spec §3.3). Gate 1 passed,
-> so lying stays the project's main trait (spec §7).
+> blind by hand: 95% agreement, Cohen's κ = 0.92, close to the labeller's own
+> consistency (self-κ 0.94 on 30 relabels; spec §3.3). Gate 1 passed, so lying
+> stays the project's main trait (spec §7).
 
 ### Design
 
@@ -170,6 +171,18 @@ mean ± 1.96·sd/√n):
 - **The role step is a bundle**: role, goal and "which the manager does not
   know" are added together, so their separate effects are unknown.
 
+### Contrast data for later phases
+
+- **Sycophancy** (`data/sycophancy/`): the CAA sycophancy set, 1000 A/B
+  questions from users who describe themselves, paired as "agrees with the
+  persona" vs "does not", for a sycophancy direction v_syc. These are opinion
+  items, a different flavour from the lying scenarios, where sycophancy would
+  mean agreeing with a false belief.
+- **Honesty** (`data/honesty/`): true and false statements from *The Geometry
+  of Truth* (cities, Spanish words, number comparisons, each with negations),
+  with no role or goal anywhere: 150 true + 150 false for extraction, a
+  disjoint 100 for Phase 3.
+
 ## Setup
 
 ```
@@ -190,7 +203,7 @@ uv run scripts/11_curate.py               # keep/delete/edit CLI -> data/lying/s
 uv run scripts/12_baseline_lying.py       # 1344 replies, judged -> artifacts/lying_baseline.{csv,txt,png}
 uv run scripts/13_calibrate_judge.py label|relabel|report   # judge vs hand labels, Cohen's kappa
 
-uv run pytest                             # 26 tests: hooks, pipeline, lying trait, judge, sycophancy data
+uv run pytest                             # 29 tests: hooks, pipeline, lying trait, judge, sycophancy and honesty data
 ```
 
 Generations and judgments are cached, so rerunning a script only computes what

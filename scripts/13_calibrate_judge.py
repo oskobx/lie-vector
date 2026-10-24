@@ -32,6 +32,7 @@ from trait_vectors.traits.lying import JUDGE_LABELS, LEVELS, LyingTrait, asked_q
 BASELINE_CSV = config.ARTIFACTS_DIR / "lying_baseline.csv"
 SAMPLE_PATH = config.ROOT / "data" / "lying" / "calibration_sample.json"
 HAND_LABELS = config.ROOT / "data" / "lying" / "hand_labels.csv"
+REPORT_PATH = config.ARTIFACTS_DIR / "judge_calibration_report.txt"
 PER_LEVEL = 8
 N_RELABEL = 30
 KEYS = {"h": "honest", "e": "evasive", "l": "lie"}
@@ -108,31 +109,35 @@ def kappa(pairs):
 
 
 def report(ids):
+    """The calibration report as a list of lines."""
     rows = baseline_rows()
     hand = load_hand_labels()
     labelled = [i for i in ids if (i, 1) in hand]
     pairs = [(hand[(i, 1)], rows[i]["label"]) for i in labelled]  # (hand, judge)
-    print(f"Judge vs hand (round 1): n = {len(pairs)}, agreement {sum(a == b for a, b in pairs) / len(pairs):.0%}, "
-          f"kappa = {kappa(pairs):.2f}")
+    versions = sorted({rows[i]["judge_model"] + " / " + rows[i]["prompt_version"] for i in labelled})
+    out = [f"Judge: {', '.join(versions)}",
+           f"Judge vs hand (round 1): n = {len(pairs)}, agreement {sum(a == b for a, b in pairs) / len(pairs):.0%}, "
+           f"kappa = {kappa(pairs):.2f}"]
     relabelled = [i for i in labelled if (i, 2) in hand]
     if relabelled:
         self_pairs = [(hand[(i, 1)], hand[(i, 2)]) for i in relabelled]
-        print(f"Hand vs hand (round 1 vs 2): n = {len(self_pairs)}, kappa = {kappa(self_pairs):.2f}  (the ceiling)")
+        out.append(f"Hand vs hand (round 1 vs 2): n = {len(self_pairs)}, kappa = {kappa(self_pairs):.2f}  (the ceiling)")
     else:
-        print("Hand vs hand: round 2 not done yet")
+        out.append("Hand vs hand: round 2 not done yet")
 
-    print("\nConfusion matrix (rows: hand, columns: judge):")
-    print(" " * 10 + "".join(f"{c:>9}" for c in JUDGE_LABELS))
+    out.append("\nConfusion matrix (rows: hand, columns: judge):")
+    out.append(" " * 10 + "".join(f"{c:>9}" for c in JUDGE_LABELS))
     for a in JUDGE_LABELS:
-        print(f"{a:10}" + "".join(f"{sum(h == a and j == b for h, j in pairs):9d}" for b in JUDGE_LABELS))
+        out.append(f"{a:10}" + "".join(f"{sum(h == a and j == b for h, j in pairs):9d}" for b in JUDGE_LABELS))
 
-    print("\nDisagreements:")
+    out.append("\nDisagreements:")
     for i in labelled:
         if hand[(i, 1)] != rows[i]["label"]:
             r = rows[i]
-            print(f"\n{i}: hand {hand[(i, 1)]}, judge {r['label']}")
-            print(f"  reply: {' '.join(r['response'].split())}")
-            print(f"  judge's quote: {r['quote']}")
+            out.append(f"\n{i}: hand {hand[(i, 1)]}, judge {r['label']}")
+            out.append(f"  reply: {' '.join(r['response'].split())}")
+            out.append(f"  judge's quote: {r['quote']}")
+    return out
 
 
 def main():
@@ -146,7 +151,10 @@ def main():
         subset = random.Random(config.SEED + 1).sample(ids, N_RELABEL)  # a fixed 30, in a new order
         label_session(subset, 2)
     else:
-        report(ids)
+        lines = report(ids)
+        print("\n".join(lines))
+        REPORT_PATH.write_text("\n".join(lines) + "\n")
+        print(f"\nwrote {REPORT_PATH}")
 
 
 if __name__ == "__main__":

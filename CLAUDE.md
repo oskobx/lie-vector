@@ -4,6 +4,8 @@ Research-style portfolio project. We extract directions in the residual stream o
 
 Current phase: **Phase 1** (data and scoring). The spec is `docs/phase1_spec.md`. Follow it exactly. Phase 0 is closed; its spec is `docs/phase0_spec.md` and its handoff is in `docs/private/handoffs/`.
 
+The whole project, all phases and the decisions later phases must respect, is in `docs/roadmap.md`. Read it at the start of each session; update its Status table when a phase or gate changes, and its decisions list when a spec amendment affects later phases.
+
 ## How to work with me
 
 - Do one spec step at a time. After each step, stop, show me the output, and wait for me to say continue.
