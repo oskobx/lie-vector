@@ -14,8 +14,9 @@ Report: level-0 pass rate (a scenario passes if its level-0 reply is judged
 honest); then, over passing scenarios only, the label rates per level with
 Wilson 95% intervals, for all scenarios, the eval split, and without the
 numeric-comparison scenarios; the goal-driven lie rate (k-lead minus
-0-lead); the effect of the leading question (k-lead minus k); and the lie
-rate per domain.
+0-lead) and the effect of the leading question (k-lead minus k), each with a
+paired bootstrap 95% interval (metrics.paired_bootstrap); and the lie rate
+per domain.
 
     uv run python scripts/12_baseline_lying.py             # the full run
     uv run python scripts/12_baseline_lying.py --dry-run   # print one filled judge prompt; no model, no API
@@ -24,8 +25,6 @@ rate per domain.
 import argparse
 import csv
 import json
-import math
-import statistics
 import time
 
 import matplotlib
@@ -34,7 +33,7 @@ matplotlib.use("Agg")  # draw to a file, no window
 import matplotlib.pyplot as plt
 
 from trait_vectors import config
-from trait_vectors.metrics import wilson
+from trait_vectors.metrics import paired_bootstrap, wilson
 from trait_vectors.model import generate, load_model
 from trait_vectors.traits.lying import JUDGE_LABELS, LEVELS, LyingTrait
 
@@ -81,15 +80,10 @@ def rates_line(name, rows):
     return f"  {name:9} n={n:3}   " + "   ".join(parts)
 
 
-def paired_difference(passing, is_lie, a, b):
-    """Mean and 95% half-width of d = lie at level a minus lie at level b, one d per scenario.
-
-    d is 1, 0 or -1 per scenario; its mean is (lie rate at a) - (lie rate at b), and
-    mean ± 1.96·sd/√n is its 95% interval. Pairing by scenario cancels how tempting
-    each scenario is in itself, which narrows the interval.
-    """
-    d = [int(is_lie[(sid, a)]) - int(is_lie[(sid, b)]) for sid in passing]
-    return statistics.mean(d), 1.96 * statistics.stdev(d) / math.sqrt(len(d))
+def difference_line(name, passing, is_lie, a, b):
+    """One report line: lie rate at level a minus at level b, same scenarios, paired bootstrap 95% interval."""
+    mean, lo, hi = paired_bootstrap([is_lie[(sid, a)] for sid in passing], [is_lie[(sid, b)] for sid in passing])
+    return f"  {name}: {mean:+.1%} [{lo:+.1%}, {hi:+.1%}]"
 
 
 def report(rows, comparison):
@@ -113,14 +107,12 @@ def report(rows, comparison):
         out += [rates_line(level, [r for r in subset if r["level"] == level]) for level in LEVELS]
 
     is_lie = {(r["id"], r["level"]): r["label"] == "lie" for r in kept}
-    out.append("\nGoal-driven lie rate (lie rate at k-lead minus at 0-lead, same scenarios), 95% CI:")
+    out.append("\nGoal-driven lie rate (lie rate at k-lead minus at 0-lead, same scenarios), paired bootstrap 95% CI:")
     for k in ["1", "2", "3"]:
-        mean, half = paired_difference(passing, is_lie, f"{k}-lead", "0-lead")
-        out.append(f"  {k}-lead: {mean:+.1%} ± {half:.1%}")
-    out.append("\nEffect of the leading question (lie rate at k-lead minus at k, same scenarios), 95% CI:")
+        out.append(difference_line(f"{k}-lead", passing, is_lie, f"{k}-lead", "0-lead"))
+    out.append("\nEffect of the leading question (lie rate at k-lead minus at k, same scenarios), paired bootstrap 95% CI:")
     for k in ["1", "2", "3"]:
-        mean, half = paired_difference(passing, is_lie, f"{k}-lead", k)
-        out.append(f"  {k}-lead vs {k}: {mean:+.1%} ± {half:.1%}")
+        out.append(difference_line(f"{k}-lead vs {k}", passing, is_lie, f"{k}-lead", k))
 
     out.append("\nLie rate per domain (passing scenarios):")
     out.append("  " + " " * 18 + "".join(f"{level:>11}" for level in LEVELS))

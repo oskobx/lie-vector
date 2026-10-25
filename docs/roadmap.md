@@ -49,7 +49,7 @@ Build the instrument: scenarios, judge, unsteered baselines.
 
 ### 2 — Steering · spec: `docs/phase2_spec.md`
 Extract directions on the **extract** split, steer on the **eval** split, measure what changes.
-- **Directions:** v_truth (true vs. false statements, no goals), v_honesty (from the scenarios: prompts answered honestly minus prompts lied to, balanced across the six role levels; spec §2.2), v_syc (CAA), v_goal only if time allows.
+- **Directions:** v_truth (true vs. false statements, no goals), v_honesty (from the scenarios: prompts answered honestly minus prompts lied to, stratified by the six role levels; spec §2.2), v_syc (CAA), v_goal only if time allows.
 - **Layer choice:** extraction statistics first (‖v_ℓ‖/r_ℓ, cross-layer cosine), then a small α sweep at 2–3 candidate layers at 1-lead only; full sweep only at the chosen layer.
 - **Sweep:** α grid inside the usable range (re-probe degeneration at the chosen layer first). Conditions: **1-lead** (main) and **0-lead** (does steering change plain agreement too?). Not all eight levels: stakes add nothing.
 - **Random-direction controls** at the same r_ℓ, every time.

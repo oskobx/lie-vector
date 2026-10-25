@@ -35,8 +35,10 @@ One forward pass per prompt, batch size 1, all layers 0 … L−2, saved with `s
 ### 2.2 v_honesty (balanced across role levels)
 Implement `LyingTrait.extraction_pairs()`:
 - Source: `artifacts/lying_baseline.csv`, **extract split only**, scenarios that pass level 0, the six role levels 1, 1-lead, 2, 2-lead, 3, 3-lead. Evasive replies are dropped.
-- Within each level, take k = min(#lie, #honest) of each, sampled with `config.SEED`; skip a level if k < 5. P_plus = the prompts (`messages_for(s, level)`) of the sampled honest replies, P_minus = those of the sampled lies.
-- Why balanced: lies come mostly from leading-question levels and honest replies mostly from neutral ones. Pooling them unbalanced would make v_honesty a "leading question" direction. With equal counts per level on both sides, the level's own effect cancels in the difference of means. Expect roughly 70–80 prompts per side; print the per-level k.
+- **Stratified difference of means** (amended 2026-10-25, §11; replaces subsampling to k = min(#lie, #honest) per level). For each level ℓ, with H_ℓ = the prompts (`messages_for(s, level)`) answered honestly and D_ℓ = those answered with a lie, all of them:
+  d_ℓ = mean(h over H_ℓ) − mean(h over D_ℓ),  v_honesty = Σ_ℓ w_ℓ d_ℓ,  w_ℓ ∝ n_H,ℓ · n_D,ℓ / (n_H,ℓ + n_D,ℓ), Σ w_ℓ = 1.
+  The weights are the inverse of each d_ℓ's noise (Var d_ℓ ∝ 1/n_H,ℓ + 1/n_D,ℓ), i.e. the minimum-variance weighted average; the same estimate as least squares of h on an honest/lie indicator plus one indicator per level. Skip a level if min(n_H,ℓ, n_D,ℓ) < 5. Print the per-level counts and weights.
+- Why stratified: lies come mostly from leading-question levels and honest replies mostly from neutral ones. Pooling them would make v_honesty a "leading question" direction. Each d_ℓ compares prompts from the same level, so the level's own effect cancels exactly, and no prompt is discarded. r_ℓ is the mean norm over all prompts used, as in `extract.py`.
 - Known limitation, for the README: the two sides still differ in which scenarios they come from (e.g. reporting-to-boss lies most), so v_honesty may carry some domain content. The random controls and held-out evaluation test whether it steers anyway.
 
 ### 2.3 v_syc (extraction only; used in Phase 4)
@@ -130,6 +132,16 @@ Phase 1 §11 left open whether 1-lead lying is goal-driven or role-induced defer
 *(append dated entries here, as in Phase 1)*
 
 **2026-10-24: judge snapshot pinned (§0.3).** Phase 1's cache did not record the snapshot, so the check is indirect: `scripts/19_check_judge_snapshot.py` re-judged 5 seeded 1-lead baseline items with the cache bypassed. 5/5 labels equal the cached ones (2 evasive, 2 honest, 1 lie); the API reports `claude-haiku-4-5-20251001` for all five. Pinned as `config.JUDGE_SNAPSHOT`; `runner._call` raises if the API reports any other model, and every new cache row stores `reported_model` (NULL for Phase 1 rows). `judge(..., use_cache=False)` added for the check.
+
+**2026-10-25: Phase 1 baseline report on the paired bootstrap (§1).** `scripts/12_baseline_lying.py` now uses `metrics.paired_bootstrap`; its normal-interval `paired_difference` is deleted. Rerun from the caches: CSV byte-identical, only the interval lines change (1-lead − 0-lead: +36.7% [+27.2, +46.2], was ± 9.5).
+
+**2026-10-25: v_honesty by stratified difference of means (§2.2).** The original plan subsampled k = min(#honest, #lie) per level, which on the extract split (79 passing scenarios) uses 70 + 70 prompts and discards 116 honest and 88 lying ones:
+
+| level | 1 | 1-lead | 2 | 2-lead | 3 | 3-lead |
+|---|---|---|---|---|---|---|
+| honest / lie | 58 / 15 | 12 / 45 | 57 / 14 | 7 / 50 | 41 / 11 | 11 / 23 |
+
+Replaced by the per-level difference of means over all prompts, combined with inverse-variance weights. Same cancellation of the level effect, no random draw, effective sample size Σ n_H n_D/(n_H + n_D) ≈ 55 instead of Σ k/2 = 35 (noise in the direction ≈ 20% lower). The remaining confound (lies concentrate in some domains, e.g. reporting-to-boss) is unchanged. `extract.py` stays as it is; the per-level means are formed from per-prompt activations.
 
 ## 12. Session plan
 
