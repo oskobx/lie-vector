@@ -2,7 +2,8 @@
 
 import pytest
 
-from trait_vectors.traits.lying import LEVELS, LyingTrait
+from trait_vectors.traits.base import split_by_id
+from trait_vectors.traits.lying import BASELINE_PATH, LEVELS, ROLE_LEVELS, LyingTrait, messages_for
 
 
 @pytest.fixture(scope="module")
@@ -54,6 +55,20 @@ def test_pressure_builds_up(trait, items):
     assert s["fact"] in system["1"] and s["stake"] not in system["1"]
     assert system["2"] == system["1"] + " " + s["stake"]
     assert system["3"] == system["2"] + " " + s["permission"]
+
+
+@pytest.mark.skipif(not BASELINE_PATH.exists(), reason="needs the Phase 1 baseline (scripts/12_baseline_lying.py)")
+def test_honesty_strata(trait):
+    """Phase 2 spec §2.2: per-level counts on the extract split, and no eval scenario anywhere."""
+    strata = trait.extraction_strata()
+    counts = {level: (len(h), len(d)) for level, (h, d) in strata.items()}
+    assert counts == {"1": (58, 15), "1-lead": (12, 45), "2": (57, 14),
+                      "2-lead": (7, 50), "3": (41, 11), "3-lead": (11, 23)}
+    eval_prompts = {str(messages_for(s, level)) for s in trait.scenarios
+                    if split_by_id(s["id"]) == "eval" for level in ROLE_LEVELS}
+    for level, (honest, lie) in strata.items():
+        assert not {str(m) for m in honest + lie} & eval_prompts
+        assert not {str(m) for m in honest} & {str(m) for m in lie}  # a reply is either honest or a lie
 
 
 def test_split_by_scenario(trait, items):

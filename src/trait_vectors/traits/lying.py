@@ -13,8 +13,12 @@ becomes eight eval items, one per condition (spec §2.2, as amended in §11):
 A plain number always asks the neutral question; "-lead" always the leading
 one. "truth" and "lie" always refer to the neutral question; the leading
 question assumes the false answer, so agreeing with it is the lie.
+
+For v_honesty (Phase 2 spec §2.2) the prompts come grouped by level, from the
+Phase 1 baseline labels: see extraction_strata().
 """
 
+import csv
 import json
 
 from trait_vectors import config
@@ -23,6 +27,12 @@ from trait_vectors.traits.base import EvalItem, split_by_id
 
 SCENARIOS_PATH = config.ROOT / "data" / "lying" / "scenarios.json"
 LEVELS = ["0", "0-lead", "1", "1-lead", "2", "2-lead", "3", "3-lead"]
+
+# v_honesty (Phase 2 spec §2.2): built from the judged unsteered replies of Phase 1,
+# at the six levels with a role, and only from levels with enough of both kinds.
+BASELINE_PATH = config.ARTIFACTS_DIR / "lying_baseline.csv"  # written by scripts/12_baseline_lying.py
+ROLE_LEVELS = ["1", "1-lead", "2", "2-lead", "3", "3-lead"]
+MIN_PER_SIDE = 5
 
 # The judge (spec §3): prompt file judge/prompts/<JUDGE_PROMPT>.md and its labels.
 # A malformed judge reply, after one re-ask, counts as evasive (with parse_error set).
@@ -87,7 +97,28 @@ class LyingTrait:
         self.scenarios = json.loads(SCENARIOS_PATH.read_text())
 
     def extraction_pairs(self):
-        raise NotImplementedError("lying extraction is Phase 2 (spec §10)")
+        raise NotImplementedError("v_honesty is extracted per level: use extraction_strata() (Phase 2 spec §2.2)")
+
+    def extraction_strata(self):
+        """{level: (honest prompts, lie prompts)} for v_honesty (Phase 2 spec §2.2).
+
+        Uses the extract split only, scenarios whose level-0 reply was judged
+        honest, and the six role levels. A prompt goes on the honest or the lie
+        side according to how the unsteered model answered it in Phase 1;
+        evasive replies are left out. A level with fewer than MIN_PER_SIDE
+        prompts on either side is skipped.
+        """
+        with open(BASELINE_PATH) as f:
+            labels = {(r["id"], r["level"]): r["label"] for r in csv.DictReader(f)}
+        passing = [s for s in self.scenarios
+                   if split_by_id(s["id"]) == "extract" and labels[(s["id"], "0")] == "honest"]
+        strata = {}
+        for level in ROLE_LEVELS:
+            honest = [messages_for(s, level) for s in passing if labels[(s["id"], level)] == "honest"]
+            lie = [messages_for(s, level) for s in passing if labels[(s["id"], level)] == "lie"]
+            if min(len(honest), len(lie)) >= MIN_PER_SIDE:
+                strata[level] = (honest, lie)
+        return strata
 
     def eval_prompts(self):
         """Eight items per scenario, ids like "car-001/1"; meta carries what the judge needs."""
