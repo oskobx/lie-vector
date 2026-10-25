@@ -178,10 +178,11 @@ mean ± 1.96·sd/√n):
   persona" vs "does not", for a sycophancy direction v_syc. These are opinion
   items, a different flavour from the lying scenarios, where sycophancy would
   mean agreeing with a false belief.
-- **Honesty** (`data/honesty/`): true and false statements from *The Geometry
+- **Truth** (`data/truth/`): true and false statements from *The Geometry
   of Truth* (cities, Spanish words, number comparisons, each with negations),
-  with no role or goal anywhere: 150 true + 150 false for extraction, a
-  disjoint 100 for Phase 3.
+  with no role or goal anywhere, for a truth direction v_truth: 150 true + 150
+  false for extraction, a disjoint 100 to check that v_truth separates
+  held-out statements.
 
 ## Setup
 
@@ -203,7 +204,7 @@ uv run scripts/11_curate.py               # keep/delete/edit CLI -> data/lying/s
 uv run scripts/12_baseline_lying.py       # 1344 replies, judged -> artifacts/lying_baseline.{csv,txt,png}
 uv run scripts/13_calibrate_judge.py label|relabel|report   # judge vs hand labels, Cohen's kappa
 
-uv run pytest                             # 29 tests: hooks, pipeline, lying trait, judge, sycophancy and honesty data
+uv run pytest                             # 35 tests: hooks, pipeline, lying trait, judge, sycophancy and truth data
 ```
 
 Generations and judgments are cached, so rerunning a script only computes what

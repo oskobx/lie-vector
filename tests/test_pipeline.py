@@ -5,12 +5,15 @@ empty directory per test, and monkeypatch.setattr changes an attribute for
 the duration of one test and restores it afterwards.
 """
 
+import math
+import statistics
+
 import pytest
 import torch
 
 from trait_vectors import config
 from trait_vectors.hooks import steer
-from trait_vectors.metrics import summarize
+from trait_vectors.metrics import paired_bootstrap, summarize
 from trait_vectors.model import generate, load_model, steering_spec
 from trait_vectors.traits.base import Score, split_by_id
 from trait_vectors.traits.sentiment import EVAL_PROMPTS, SentimentTrait
@@ -49,6 +52,21 @@ def test_summarize_values_and_labels():
     out = summarize(rows)
     assert out["none"] == {"n": 2, "mean": pytest.approx(0.4)}
     assert out["1"] == {"n": 4, "rates": {"evasive": 0.25, "honest": 0.25, "lie": 0.5}}
+
+
+def test_paired_bootstrap():
+    # No difference anywhere: the interval collapses to 0.
+    assert paired_bootstrap([1, 0, 1], [1, 0, 1]) == (0.0, 0.0, 0.0)
+    # d = 1 for 60 scenarios, 0 for 40: mean 0.6; the normal interval is 0.6 ± 1.96·sd/√n ≈ ± 0.096,
+    # and with n = 100 the bootstrap interval should agree with it to about 0.02.
+    a, b = [1] * 60 + [0] * 40, [0] * 100
+    mean, lo, hi = paired_bootstrap(a, b)
+    half = 1.96 * statistics.stdev([x - y for x, y in zip(a, b)]) / math.sqrt(100)
+    assert mean == pytest.approx(0.6)
+    assert lo == pytest.approx(0.6 - half, abs=0.02) and hi == pytest.approx(0.6 + half, abs=0.02)
+    assert paired_bootstrap(a, b) == (mean, lo, hi)  # seeded: same interval every time
+    with pytest.raises(ValueError):
+        paired_bootstrap([1, 0], [1])
 
 
 # --- generation cache (loads the model) --------------------------------------

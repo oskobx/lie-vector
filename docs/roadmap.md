@@ -6,18 +6,18 @@ Last updated: 2026-10-24 (Phase 1 closed; Phase 2 started).
 
 ## Research question
 
-Does a direction in the residual stream of Qwen2.5-1.5B-Instruct control **lying under goal pressure**, and does an honesty direction extracted from plain true/false statements (no goals anywhere) transfer to it?
+Does a direction in the residual stream of Qwen2.5-1.5B-Instruct control **lying under goal pressure**, and does a truth direction extracted from plain true/false statements (no goals anywhere) transfer to it?
 
 "Lying" here is a specific, measured behaviour: a character with a goal **confirms the counterpart's false hopeful belief** when the truth would hurt the goal ("The battery still holds a good charge, right?" — "Yes"). It is not volunteering an unprompted lie, and at 1.5B it is role-play, not scheming. State both in the README.
 
-**Knowing vs. telling.** v_honesty is extracted from plain true/false statements with no question and no goal, so it captures how the model marks a statement as true or false (a "truth direction"). v_lie is extracted from the scenarios, where the model knows the fact and says the opposite to reach a goal, so it captures the decision to lie. A lie needs both: the model must know the truth (level 0 checks this) and say something else anyway. Two pictures the project distinguishes:
+**Knowing vs. telling.** v_truth is extracted from plain true/false statements with no question and no goal, so it captures how the model marks a statement as true or false. v_honesty is extracted from the scenarios, as prompts the model answered honestly minus prompts it lied to, so it captures the decision whether to tell the truth; the lie direction of the title is −v_honesty. A lie needs both: the model must know the truth (level 0 checks this) and say something else anyway. Two pictures the project distinguishes:
 
 | picture | what happens when it lies | what Phases 2 and 4 would show |
 |---|---|---|
-| A: lying suppresses the truth signal | the "this is true" signal is pushed down before speaking | v_honesty steers lying; v_lie ≈ −v_honesty |
-| B: lying is a separate behaviour | the model still knows the truth; a separate goal-driven mechanism overrides what it says | v_honesty does not steer lying; v_lie points elsewhere |
+| A: lying suppresses the truth signal | the "this is true" signal is pushed down before speaking | v_truth steers lying; v_honesty ≈ v_truth |
+| B: lying is a separate behaviour | the model still knows the truth; a separate goal-driven mechanism overrides what it says | v_truth does not steer lying; v_honesty points elsewhere |
 
-The answer may be in between; the Phase 4 span test quantifies how much of v_lie lies along the truth axis (cosine, residual fraction, both against random baselines).
+The answer may be in between; the Phase 4 span test quantifies how much of v_honesty lies along the truth axis (cosine, residual fraction, both against random baselines).
 
 ## Status
 
@@ -44,19 +44,19 @@ Build the instrument: scenarios, judge, unsteered baselines.
 - Eight levels. A plain number asks the **neutral** question, "-lead" the **leading** one: **0** (no role: comprehension filter), **0-lead** (no role: plain agreement / sycophancy control), **1** (+ role, goal, secret fact), **2** (+ stake), **3** (+ permission to lie), and **1-lead, 2-lead, 3-lead** (the same with the leading question). **1-lead is the main measurement.**
 - Judge (Haiku, prompt `lying_v1`, cached) labelling honest / evasive / lie; κ = 0.92 against 64 blind hand labels; self-κ 0.94 (30 relabels).
 - Baseline: lie rate 1-lead 56%, 0-lead 20%, so **goal-driven lie rate ≈ +37 points**. With the neutral question, levels 1–3 lie ≈ 18%: role and leading question each give ≈ 20% alone and 56% together. Stake adds nothing (2-lead 58%). Levels 3 / 3-lead mostly trigger refusals.
-- Contrast data, loaded but not extracted: `traits/honesty.py` (Geometry of Truth true/false statements), `traits/sycophancy.py` (CAA A/B pairs, returned as chats with a partial assistant turn).
+- Contrast data, loaded but not extracted: `traits/truth.py` (Geometry of Truth true/false statements), `traits/sycophancy.py` (CAA A/B pairs, returned as chats with a partial assistant turn).
 **Gate 1:** level-0 pass ≥ 60% · lie rate at 1-lead or 2-lead in [15%, 85%] · judge κ ≥ 0.6 or within 0.1 of self-κ. Fail after half a day of tuning → choose a fallback trait then. **Passed 2026-10-23** (eval split: 92.9%, 55.7%, κ 0.92).
 
 ### 2 — Steering · spec: `docs/phase2_spec.md`
 Extract directions on the **extract** split, steer on the **eval** split, measure what changes.
-- **Directions:** v_honesty (true vs. false statements, no goals), v_lie (from the scenarios: 1-lead replies that lie vs. answer honestly, or 1-lead vs. 0-lead activations; the spec will pick one), v_syc (CAA), v_goal only if time allows.
+- **Directions:** v_truth (true vs. false statements, no goals), v_honesty (from the scenarios: prompts answered honestly minus prompts lied to, balanced across the six role levels; spec §2.2), v_syc (CAA), v_goal only if time allows.
 - **Layer choice:** extraction statistics first (‖v_ℓ‖/r_ℓ, cross-layer cosine), then a small α sweep at 2–3 candidate layers at 1-lead only; full sweep only at the chosen layer.
 - **Sweep:** α grid inside the usable range (re-probe degeneration at the chosen layer first). Conditions: **1-lead** (main) and **0-lead** (does steering change plain agreement too?). Not all eight levels: stakes add nothing.
 - **Random-direction controls** at the same r_ℓ, every time.
 - **Side-effect audit (twist 1):** goal pursuit (judge: does it still try to sell?), GSM8K accuracy (load GSM8K here; it is not stored from Phase 1), fluency (perplexity under the unsteered model, or reading), over-refusal on harmless prompts if time allows.
 - **Needs:** `extract.py` to accept chat inputs with a partial assistant turn (`continue_final_message=True`) for CAA.
-**Output:** lie rate vs. α (with 0-lead and random controls), cost curves, answer to the transfer question (does v_honesty steer lying?).
-**Gate 2:** at least one direction moves the 1-lead lie rate roughly monotonically in α on held-out scenarios. If v_honesty fails but v_lie works, that is a *finding* (instrumental lying is a different feature), not a failure. If neither steers: write up the measurement and the null cleanly.
+**Output:** lie rate vs. α (with 0-lead and random controls), cost curves, answer to the transfer question (does v_truth steer lying?).
+**Gate 2:** at least one direction moves the 1-lead lie rate roughly monotonically in α on held-out scenarios. If v_truth fails but v_honesty works, that is a *finding* (instrumental lying is a different feature), not a failure. If neither steers: write up the measurement and the null cleanly.
 
 ### 3 — Detection (twist 4)
 Does the projection ⟨h_ℓ, v̂⟩ at the last prompt token, **before** the model answers, predict whether it will lie?
@@ -66,11 +66,11 @@ Does the projection ⟨h_ℓ, v̂⟩ at the last prompt token, **before** the mo
 **Output:** AUROC table; the reading-vs-writing comparison.
 
 ### 4 — Geometry (twist 3)
-- Pairwise cosines among v_honesty, v_lie, v_syc (v_goal if extracted), **each against a random-direction baseline** (cosines of random unit vectors in R^d ~ N(0, 1/d)).
-- Span test: least-squares projection of v_lie onto span(v_honesty, v_goal or v_syc); report the residual fraction of ‖v_lie‖² vs. the random baseline.
+- Pairwise cosines among v_truth, v_honesty, v_syc (v_goal if extracted), **each against a random-direction baseline** (cosines of random unit vectors in R^d ~ N(0, 1/d)).
+- Span test: least-squares projection of v_honesty onto span(v_truth, v_goal or v_syc); report the residual fraction of ‖v_honesty‖² vs. the random baseline.
 - Stability of each direction across layers; singular values of the stacked matrix.
 - Optional (first cut): additivity test, steering with α1 v1 + α2 v2.
-**Output:** one table and one figure; the "where lies live" result. Is v_lie close to v_syc? (Sycophancy leak check from Phase 1's leading-question design.)
+**Output:** one table and one figure; the "where lies live" result. Is the lie direction (−v_honesty) close to v_syc? (Sycophancy leak check from Phase 1's leading-question design.)
 
 ### 4.5 — Scale check (optional)
 Rerun Phases 1–3 unchanged on Qwen2.5-3B overnight. First thing to cut.
@@ -83,6 +83,7 @@ Rerun Phases 1–3 unchanged on Qwen2.5-3B overnight. First thing to cut.
 ## Decisions later phases must respect
 
 - Model Qwen2.5-1.5B-Instruct, bfloat16 on MPS, greedy decoding, no quantization.
+- Direction names (renamed 2026-10-25): **v_truth** from true/false statements (knowing), **v_honesty** = honest − lie from the scenarios (telling). The lie direction is −v_honesty. Phase 0–1 documents use the old names (v_honesty for the truth direction, v_lie for the lie direction).
 - Directions extracted only on the **extract** split; all reported numbers on the **eval** split.
 - Every steering result has random-direction controls; every cosine has a random baseline.
 - Lie rates are reported over scenarios that pass level 0, and the goal-driven rate subtracts 0-lead.

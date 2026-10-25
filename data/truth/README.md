@@ -1,4 +1,4 @@
-# Honesty data
+# Truth data
 
 True and false factual statements from *The Geometry of Truth* (Marks & Tegmark, 2023),
 downloaded once and kept unchanged.
@@ -16,5 +16,6 @@ downloaded once and kept unchanged.
 | `larger_than.csv` | 1980 | Fifty-one is larger than fifty-two. |
 | `smaller_than.csv` | 1980 | Fifty-one is smaller than fifty-two. |
 
-Used by `traits/honesty.py` (spec §6): statements as plain user messages, with no
-goal or role anywhere, for the honesty direction v_honesty.
+Used by `traits/truth.py` (Phase 1 spec §6): statements as plain user messages, with no
+goal or role anywhere, for the truth direction v_truth. (Phase 0–1 documents call this
+directory `data/honesty/` and the direction v_honesty; renamed 2026-10-25, see `docs/roadmap.md`.)
