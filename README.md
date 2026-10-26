@@ -7,9 +7,14 @@ PyTorch hooks.
 
 - **Phase 0** (plumbing, closed): `docs/phase0_spec.md`. The pipeline, proved
   end to end on a toy trait (sentiment).
-- **Phase 1** (data and scoring, in progress): `docs/phase1_spec.md`. Measure
-  when the unsteered model lies, so Phase 2 has a baseline to steer. Every
-  change to the plan is recorded with its numbers in the spec's §11.
+- **Phase 1** (measurement, closed): `docs/phase1_spec.md`. When does the
+  unsteered model lie? Scenarios, a calibrated judge, and baselines that
+  Phase 2 steers against.
+- **Phase 2** (steering, in progress): `docs/phase2_spec.md`. Extract
+  directions and steer the lie rate with them.
+
+The whole plan, phase by phase, is in `docs/roadmap.md`. Every change to a
+phase's plan is recorded with its numbers in that spec's amendments section.
 
 ## Phase 0 results: steering sentiment
 
@@ -50,7 +55,7 @@ prompts were rephrased as writing tasks and tripled, and the layer grid moved
 to where the extraction statistics said the direction existed. The amendment
 and its reasons are recorded in the spec.
 
-## Phase 1 (in progress): when does a small model lie?
+## Phase 1 results: when does a small model lie?
 
 > **Labels** come from an LLM judge, calibrated against 64 replies labelled
 > blind by hand: 95% agreement, Cohen's κ = 0.92, close to the labeller's own
@@ -132,19 +137,19 @@ Lie rate over the 158 passing scenarios, with Wilson 95% intervals:
 | + stake | 18% [13, 24] (2) | **58%** [50, 66] (2-lead) |
 | + permission | 17% [12, 24] (3) | 34% [27, 41] (3-lead) |
 
-Differences below are paired by scenario (one difference per scenario,
-mean ± 1.96·sd/√n):
+Differences below are paired by scenario (one difference per scenario), with
+paired bootstrap 95% intervals:
 
 1. **Role and leading question interact.** Each alone gives about 20%;
-   together, 56%. The role adds +36.7% ± 9.5 under a leading question
-   (1-lead vs 0-lead), and the leading question adds +37.3% ± 8.3 under a role
-   (1-lead vs 1).
-2. **The stake has no measurable effect**: +1.9% ± 6.5 (2-lead vs 1-lead).
+   together, 56%. The role adds +36.7% [+27.2, +46.2] under a leading question
+   (1-lead vs 0-lead), and the leading question adds +37.3% [+29.1, +45.6]
+   under a role (1-lead vs 1).
+2. **The stake has no measurable effect**: +1.9% [−4.4, +8.2] (2-lead vs 1-lead).
 3. **Explicit permission backfires.** Adding "including false statements"
-   *lowers* lying by 24.7% ± 7.8 and raises evasive replies by 22.8% ± 8.8
-   (3-lead vs 2-lead), mostly flat refusals ("I'm sorry, but I can't assist
-   with that request."). Naming the lie seems to trigger safety training that
-   implicit pressure does not.
+   *lowers* lying by 24.7% [16.5, 32.9] and raises evasive replies by 22.8%
+   [13.9, 31.6] (3-lead vs 2-lead), mostly flat refusals ("I'm sorry, but I
+   can't assist with that request."). Naming the lie seems to trigger safety
+   training that implicit pressure does not.
 4. **Domains differ**: covering one's own mistake to a manager lies most
    (81–90% at 1-lead and 2-lead); the other four domains range from 38% to 64%.
 5. **Robust to the risky items**: dropping the 20 threshold-comparison
@@ -184,6 +189,42 @@ mean ± 1.96·sd/√n):
   false for extraction, a disjoint 100 to check that v_truth separates
   held-out statements.
 
+## Phase 2 (in progress): steering lying
+
+Two directions are the candidates for steering, one for *knowing* and one for
+*telling*:
+
+- **v_truth**: true minus false statements from the Geometry of Truth (no
+  question, no goal). How the model marks a statement as true.
+- **v_honesty**: prompts the model answered honestly minus prompts it lied
+  to, from the scenarios' extract split. Lies concentrate at the "-lead"
+  levels, so a plain difference of means would partly measure "leading vs.
+  neutral prompt". Instead the difference is taken within each of the six
+  role levels and the six are combined with weights proportional to
+  n_H·n_L/(n_H + n_L), where n_H and n_L count that level's honest and lying
+  prompts. The lie direction is −v_honesty.
+
+A third, **v_syc** (CAA sycophancy pairs), is extracted for the Phase 4
+geometry. The research question is whether v_truth, built with no goals
+anywhere, also steers lying, or whether only v_honesty does.
+
+![directions per layer](docs/figures/phase2_directions.png)
+
+Directions (spec §2, all from the extract split):
+
+- **v_truth is real**: on 100 held-out statements, projecting onto it
+  separates true from false with AUROC 0.974 at layer 18 (≥ 0.9 from layer
+  15). So "does v_truth steer lying?" is a meaningful test.
+- **v_truth forms abruptly** at layers 15–17 (relative length 0.011 → 0.115,
+  peak 0.178 at layer 22); **v_honesty grows gradually** from about layer 10
+  (peak 0.092 at 22–23). Both are stable across neighbouring layers late in
+  the network (cosine > 0.9 from layer 22).
+- **v_syc is weak** (relative length ≤ 0.028 at every layer).
+
+Next: choosing the steering layer, then the main sweep of lie rate vs. α at
+1-lead and 0-lead with random-direction controls, and a side-effect audit
+(goal pursuit, fluency, maths).
+
 ## Setup
 
 ```
@@ -204,7 +245,12 @@ uv run scripts/11_curate.py               # keep/delete/edit CLI -> data/lying/s
 uv run scripts/12_baseline_lying.py       # 1344 replies, judged -> artifacts/lying_baseline.{csv,txt,png}
 uv run scripts/13_calibrate_judge.py label|relabel|report   # judge vs hand labels, Cohen's kappa
 
-uv run pytest                             # 35 tests: hooks, pipeline, lying trait, judge, sycophancy and truth data
+# Phase 2
+uv run scripts/19_check_judge_snapshot.py # is the judge still the model that labelled Phase 1?
+uv run scripts/20_extract_directions.py   # v_truth, v_honesty, v_syc at every layer -> artifacts/vectors/
+uv run scripts/21_pilot_layers.py         # which layer steers lying best (extract split)
+
+uv run pytest                             # 37 tests
 ```
 
 Generations and judgments are cached, so rerunning a script only computes what
@@ -219,7 +265,8 @@ is missing.
   output). Exception: for ℓ = L−1, HF applies the final norm before returning
   it, so they differ. We never hook the last block.
 - "Last token" means position −1 of the chat-templated prompt built with
-  `add_generation_prompt=True`.
+  `add_generation_prompt=True`. For a chat ending in a partial assistant turn
+  (CAA: "(A"), the turn is left open instead, so position −1 is the letter.
 - **Steering scale.** Let v̂ = v/‖v‖ and r_ℓ = mean of ‖h_ℓ‖ at the last token
   over the extraction prompts. Steering is h_ℓ ↦ h_ℓ + α · r_ℓ · v̂, applied at
   every position on every forward pass. So α is dimensionless: α = 1 is a shift
@@ -232,6 +279,9 @@ is missing.
   decoding makes a cached reply exact. Calling it while a steering hook is
   attached, without describing the steering, raises an error, so a steered
   call can never return an unsteered reply.
+- **Intervals.** Single rates get Wilson 95% intervals; differences between
+  two conditions on the same scenarios get paired bootstrap 95% intervals
+  (2,000 resamples of the per-scenario differences, seeded).
 - **Traits** implement one interface (`traits/base.py`): eval items carry a
   `condition` (the level), scores are a label or a number, and `split(item)`
   assigns `extract` or `eval` from a seeded hash of the id. Nothing outside
