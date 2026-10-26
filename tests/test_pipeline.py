@@ -13,7 +13,7 @@ import torch
 
 from trait_vectors import config
 from trait_vectors.hooks import steer
-from trait_vectors.metrics import paired_bootstrap, summarize
+from trait_vectors.metrics import auroc, paired_bootstrap, summarize
 from trait_vectors.model import generate, load_model, steering_spec
 from trait_vectors.traits.base import Score, split_by_id
 from trait_vectors.traits.sentiment import EVAL_PROMPTS, SentimentTrait
@@ -52,6 +52,13 @@ def test_summarize_values_and_labels():
     out = summarize(rows)
     assert out["none"] == {"n": 2, "mean": pytest.approx(0.4)}
     assert out["1"] == {"n": 4, "rates": {"evasive": 0.25, "honest": 0.25, "lie": 0.5}}
+
+
+def test_auroc():
+    assert auroc([3, 4], [1, 2]) == 1.0      # every pos above every neg
+    assert auroc([1, 2], [3, 4]) == 0.0      # every pos below
+    assert auroc([1, 3], [2]) == 0.5         # one pair above, one below
+    assert auroc([1], [1]) == 0.5            # a tie counts half
 
 
 def test_paired_bootstrap():

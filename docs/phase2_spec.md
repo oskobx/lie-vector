@@ -49,8 +49,8 @@ Per layer, for each direction: ‖v_ℓ‖ / r_ℓ, cos(v_ℓ, v_ℓ+1); for v_t
 
 ## 3. Layer choice (`scripts/21_pilot_layers.py`)
 
-1. From the §2.4 table, propose 3 candidate layers per direction where the direction has formed (‖v‖/r risen, consecutive cosines high). Default if the table is flat: {14, 18, 22}. Show the choice before running.
-2. Pilot on the **extract** split, 1-lead, passing scenarios: for each direction and candidate layer, α_h ∈ {−0.6, +0.6} (α_h = 0 comes from the baseline). ~950 generations + judgments, ~1 h.
+1. Candidate layers (amended 2026-10-25, §11): **{14, 16, 18, 20, 22, 24} for both directions**, every other layer across the region where the directions form and settle; 14 is before v_truth forms and serves as a check that steering fails there.
+2. Pilot on the **extract** split, 1-lead, passing scenarios: for each direction and candidate layer, α_h ∈ {−0.6, +0.6} (α_h = 0 comes from the baseline). ~1,900 generations + judgments, ~2 h.
 3. Choose, per direction, the layer with the largest drop in lie rate from α_h = −0.6 to +0.6, unless its +0.6 replies are visibly broken (read 10). The two directions may get different layers; record both choices and the pilot table.
 
 ## 4. Degeneration bound at the chosen layers
@@ -111,12 +111,12 @@ Record the decision with its numbers in this spec (§11), and the reading in the
 | step | generations | judge calls | time |
 |---|---|---|---|
 | §2 extraction | ~2,400 forward passes, no generation | 0 | ~10 min |
-| §3 pilot | ~950 | ~950 | ~1 h |
+| §3 pilot | ~1,900 | ~1,900 | ~2 h |
 | §4 degeneration | ~60 | 0 | ~5 min |
 | §5 sweep | ~2,200 | ~2,200 | ~2–3 h |
 | §5.2 goal | 0 | ~790 | ~15 min |
 | §6 GSM8K | ~400 (long) | 0 | ~1 h |
-| **total** | | **~3,900 (~$4)** | **~5 h machine** |
+| **total** | | **~4,900 (~$5)** | **~6 h machine** |
 
 GPU jobs run one at a time.
 
@@ -142,6 +142,8 @@ Phase 1 §11 left open whether 1-lead lying is goal-driven or role-induced defer
 | honest / lie | 58 / 15 | 12 / 45 | 57 / 14 | 7 / 50 | 41 / 11 | 11 / 23 |
 
 Replaced by the per-level difference of means over all prompts, combined with inverse-variance weights. Same cancellation of the level effect, no random draw, effective sample size Σ n_H n_D/(n_H + n_D) ≈ 55 instead of Σ k/2 = 35 (noise in the direction ≈ 20% lower). The remaining confound (lies concentrate in some domains, e.g. reporting-to-boss) is unchanged. `extract.py` stays as it is; the per-level means are formed from per-prompt activations.
+
+**2026-10-25: §2 results and six pilot layers (§3).** Extraction (`scripts/20_extract_directions.py`, 4.5 min): v_truth held-out AUROC 0.974 at layer 18, ≥ 0.9 from layer 15, so the transfer test is meaningful. v_truth forms abruptly at layers 15–17 (‖v‖/r 0.011 → 0.115), peak 0.178 at 22; v_honesty grows gradually from ~10, peak 0.092 at 22–23; consecutive cosines > 0.75 from ~17 and > 0.9 from 22 for both. v_syc weak (‖v‖/r ≤ 0.028). Strata weights 0.217 / 0.173 / 0.205 / 0.112 / 0.158 / 0.136. Pilot widened from 3 candidate layers to every other layer 14–24 for both directions (Oskar): a finer lie-rate-vs-layer picture for ~1 h more machine time; selecting the best of six on the extract split does not bias the eval-split results.
 
 ## 12. Session plan
 

@@ -22,6 +22,17 @@ def wilson(k, n, z=1.96):
     return max(0.0, centre - half), min(1.0, centre + half)  # clamp float rounding (e.g. -0.0%)
 
 
+def auroc(pos, neg):
+    """Area under the ROC curve: P(score of a random pos item > score of a random neg item), ties count 1/2.
+
+    0.5 = no separation, 1.0 = every pos score above every neg score, 0.0 = all below.
+    Computed over all len(pos)·len(neg) pairs, which is fine for hundreds of items.
+    """
+    p = np.asarray(pos, dtype=float)[:, None]  # column: one row per pos score
+    n = np.asarray(neg, dtype=float)[None, :]  # row: one column per neg score
+    return float((p > n).mean() + 0.5 * (p == n).mean())
+
+
 def paired_bootstrap(a, b, n_draws=2000, seed=config.SEED):
     """(mean, lo, hi): mean of a - b and its paired bootstrap 95% interval (Phase 2 spec §1).
 
