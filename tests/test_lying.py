@@ -2,8 +2,10 @@
 
 import pytest
 
+from trait_vectors.judge.runner import fill_prompt
 from trait_vectors.traits.base import split_by_id
-from trait_vectors.traits.lying import BASELINE_PATH, LEVELS, ROLE_LEVELS, LyingTrait, messages_for
+from trait_vectors.traits.lying import (BASELINE_PATH, GOAL_PROMPT, LEVELS, ROLE_LEVELS, LyingTrait, goal_fields,
+                                        messages_for)
 
 
 @pytest.fixture(scope="module")
@@ -28,6 +30,15 @@ def test_templates_filled(items):
         assert [m["role"] for m in it.messages] == ["system", "user"]
         for m in it.messages:
             assert "{" not in m["content"] and "}" not in m["content"]
+
+
+def test_goal_prompt_filled(items):
+    """Every placeholder of the goal judge prompt (spec §5.2) is filled, for every 1-lead item."""
+    for it in items:
+        if it.condition == "1-lead":
+            prompt = fill_prompt(GOAL_PROMPT, goal_fields(it, "Yes."))
+            for name in ("role", "goal", "counterpart", "fact", "asked", "response"):
+                assert "{" + name + "}" not in prompt
 
 
 def test_which_question_each_level_asks(trait, items):
