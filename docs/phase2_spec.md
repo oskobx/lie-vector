@@ -176,7 +176,7 @@ At layer 14, v_honesty does little either way, and its replies are mostly evasiv
 | +1.0 | short, facts garbled ("about 10 days now") | partly broken ("<><>", thank-you loops) |
 | +1.5 | number loops | garbage, mixed scripts |
 
-Fluent and on-topic in both directions up to |α| = 0.6, semantic breakage from 1.0, as for sentiment at layer 18 in Phase 0. **α_max = 0.6 for both**; main-sweep grid α ∈ {−0.6, −0.3, 0, +0.3, +0.6}.
+Fluent and on-topic in both directions up to |α| = 0.6, semantic breakage from 1.0, as for sentiment at layer 18 in Phase 0. **α_max = 0.6 for both**; main-sweep grid α ∈ {−0.6, −0.3, 0, +0.3, +0.6}. *(Superseded 2026-10-27, see below: random directions show 0.6 already breaks fluency and maths; the limit is relocated by a measured rule.)*
 
 **2026-10-27: §5 sweep done; post-hoc diagnostics (found after seeing the data).** `scripts/23_sweep_lying.py`, 2,370 rows. Full numbers go in the §7 report; three findings bear on how Gate 2 is read:
 - **v_honesty pushes the word "No".** 1-lead "No"-starts 18 → 61 → 76 of 79 (α_h 0, +0.3, +0.6), of which lies 4 → 16 → 27; lie rate at +0.6 (34%) is above +0.3 (22%).
@@ -196,6 +196,34 @@ Diagnostics, run early at Oskar's request although cosines are otherwise Phase 4
 | +0.6 | 11 | 2 | 3 | 0 |
 
 (v_truth rows by honesty-ward α_h: +α_h = raw −α.) Pushing toward honesty turns the lying salesperson into a neutral fact-reader, not an honest salesperson. Hand labels (Oskar, 30, seeded, blind; `data/lying/goal_sample.json`, `goal_hand_labels.csv`): agreement 83%, **κ = 0.66**. All 5 disagreements are hand *pursues*, judge *abandons*, 4 of them in lie-ward cells (effusive "Absolutely!…" replies, two called garbled by the judge; one bare lie the judge should have called pursues by its own rule). The judge never called pursues what Oskar called abandons, so it undercounts pursuit, mainly on the lie-ward side; the honesty-ward drop in pursuit stands.
+
+**2026-10-27: §6 GSM8K: scoring loosened, +0.3 added.** `scripts/24_gsm8k_audit.py`; prompt recovered from the Phase 1 code: question, blank line, "Show your reasoning, then end with a line 'Final answer: <number>'." Two changes after the first run:
+- **Scoring.** The strict reading (only "Final answer: <number>") missed most unsteered answers, which the model writes as "**Final answer:** Amy has 14 more…" or "the final answer is: \boxed{14}"; strict unsteered accuracy was 22%. Now the answer is the number an explicit marker points to: "final answer" followed by a number on the same line, or \boxed{<number>}, the last marker if several. Still no last-number fallback. Strict accuracy is kept as a report column.
+- **+0.3 added** for v_honesty and random0 (Oskar): at α_max every direction, random included, breaks the 400-token answers, so α_max alone can't separate a v_honesty-specific cost from "any push this strong".
+
+| condition | α | accuracy | strict | no answer | minus unsteered [95% CI] |
+|---|---|---|---|---|---|
+| none | 0 | 53% | 22% | 26 | |
+| v_honesty | +0.6 | 1% | 1% | 48 | −52 [−62, −42] |
+| v_truth | −0.6 | 0% | 0% | 99 | −53 [−63, −44] |
+| random0 | +0.6 | 13% | 11% | 29 | −40 [−51, −29] |
+| v_honesty | +0.3 | 42% | 31% | 30 | −11 [−22, 0] |
+| random0 | +0.3 | 46% | 34% | 25 | −7 [−17, +4] |
+
+At α_max maths collapses for every direction (v_truth's replies ramble to the token limit: 99 without an answer). At +0.3 v_honesty costs 11 points, close to random's 7. Reading: no clear v_honesty-specific maths cost at +0.3; one random direction only.
+
+**2026-10-27: α_max = 0.6 was too generous; rule for relocating it (written before the new runs; post hoc with respect to the sweep).** The §4 check (5 short replies read by hand) judged 0.6 fluent, but random directions show 0.6 already breaks the model while 0.3 does not: 1-lead median perplexity 4.16–5.08 at ±0.6 vs 2.28–2.54 at ±0.3 (unpushed 2.09, so the §5.1 limit is 4.18); GSM8K random0 13% at +0.6 vs 46% at +0.3 (unpushed 53%). This evidence comes from random directions only, not from any direction's lie rate. Why §4 missed it: 5 prompts, 80-token replies, read by eye for fluency, a method carried over from Phase 0 sentiment. Too few examples, too short for damage to build up, and fluency is not reasoning ("20 + 30 = 10 minutes" reads fine). The roadmap now requires measured push limits for later phases. Oskar: locate the limit between 0.3 and 0.6 instead of taking 0.3 directly.
+
+**Rule (confirmed by Oskar before any result of the new runs was seen):** α_max is the largest α in {0.3, 0.4, 0.5, 0.6} at which both hold:
+1. each of the three random directions, at +α and at −α on eval 1-lead, has median perplexity ≤ 2× the unpushed median (§5.1);
+2. random0 at +α on GSM8K loses at most 10 points against unsteered.
+
+If a value fails, larger ones are not considered. Runs: random directions at α_h ∈ {±0.4, ±0.5} added to `scripts/23_sweep_lying.py` (`LIMIT_ALPHAS_H`, judged too, for Gate 2 criterion 3); random0 at +0.4, +0.5 added to `scripts/24_gsm8k_audit.py`. Then: v_honesty and v_truth at the new α_max (if new) and α_max/2, and Gate 2 is evaluated at the new α_max **and**, for the record, as originally written at 0.6.
+
+**Status of this amendment (Oskar asked whether it is fair).** It is not as clean as a pre-registered result: the limit was revisited only because v_honesty disappointed at 0.6; the 10-point maths threshold was set knowing random loses 7 at 0.3; and v_honesty and v_truth at 0.3 had already been seen. What keeps it fair: the rule uses random directions only, never a direction's lie rate; it was fixed before the new runs; the evidence (random directions breaking at 0.6) comes from pre-registered measurements. Reporting accordingly:
+1. **Primary:** Gate 2 as written, at α_max = 0.6, whatever it says.
+2. **Secondary, labelled post hoc:** Gate 2 at the relocated α_max.
+3. **Confirmation on new data:** the §10 true-lead run, with predictions for v_honesty at the relocated α_max written into this section before it runs.
 
 ## 12. Session plan
 
