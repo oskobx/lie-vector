@@ -14,7 +14,7 @@ import torch
 from trait_vectors import config
 from trait_vectors.hooks import steer
 from trait_vectors.metrics import auroc, paired_bootstrap, summarize
-from trait_vectors.model import generate, load_model, steering_spec
+from trait_vectors.model import generate, load_model, reply_perplexity, steering_spec
 from trait_vectors.traits.base import Score, split_by_id
 from trait_vectors.traits.sentiment import EVAL_PROMPTS, SentimentTrait
 
@@ -110,6 +110,19 @@ def test_string_and_user_only_list_share_a_key(loaded, tmp_path, monkeypatch):
     generate(model, tokenizer, "Name a colour.", max_new_tokens=5)
     generate(model, tokenizer, [{"role": "user", "content": "Name a colour."}], max_new_tokens=5)
     assert len(list(tmp_path.glob("*.json"))) == 1
+
+
+def test_reply_perplexity(loaded):
+    """The model's own greedy reply is unsurprising to it; the same words scrambled are not."""
+    model, tokenizer = loaded
+    prompt = "Describe a sunny morning in two sentences."  # a reply of several words, so scrambling changes it
+    reply = generate(model, tokenizer, prompt, max_new_tokens=40, cache=False)
+    scrambled = " ".join(reversed(reply.split()))
+    own, garbage = reply_perplexity(model, tokenizer, prompt, reply), reply_perplexity(model, tokenizer, prompt, scrambled)
+    assert own < 3.0 and garbage > 10 * own
+    with steer(model, model.config.num_hidden_layers // 2, torch.ones(model.config.hidden_size), alpha=0.1, r=1.0):
+        with pytest.raises(ValueError):
+            reply_perplexity(model, tokenizer, prompt, reply)
 
 
 def test_steered_call_needs_steering_spec(loaded, tmp_path, monkeypatch):

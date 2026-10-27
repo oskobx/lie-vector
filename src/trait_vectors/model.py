@@ -7,6 +7,7 @@ caller passes in (see generate and steering_spec).
 
 import hashlib
 import json
+import math
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedModel
@@ -93,6 +94,30 @@ def _steer_hook_active(model):
             if fn.__qualname__.startswith("steer."):
                 return True
     return False
+
+
+def reply_perplexity(model, tokenizer, messages, response):
+    """exp(-mean log p(reply token | prompt, earlier reply tokens)) under the unsteered model (Phase 2 spec §5.1).
+
+    One forward pass over prompt + reply, no generation. logits[t] is the
+    model's prediction for the token at position t + 1, so the reply's tokens,
+    at positions n_prompt .. n - 1, are scored by rows n_prompt - 1 .. n - 2.
+    The reply is re-tokenized from its text, which can split a few tokens
+    differently from generation; that is the same for every reply.
+    """
+    if _steer_hook_active(model):
+        raise ValueError("perplexity is measured under the unsteered model: no steer() hook may be active")
+    prompt_ids = build_inputs(tokenizer, messages)["input_ids"][0]
+    reply_ids = tokenizer(response, add_special_tokens=False, return_tensors="pt")["input_ids"][0]
+    if len(reply_ids) == 0:
+        return float("nan")
+    ids = torch.cat([prompt_ids, reply_ids]).unsqueeze(0).to(model.device)  # (1, n): batch of one
+    with torch.inference_mode():
+        logits = model(ids).logits[0].float()                              # (n, vocabulary size)
+    n_prompt = len(prompt_ids)
+    log_probs = logits[n_prompt - 1:-1].log_softmax(dim=-1)                # one row per reply token
+    picked = log_probs[torch.arange(len(reply_ids)), reply_ids.to(model.device)]
+    return math.exp(-picked.mean().item())
 
 
 def generate(model, tokenizer, messages, max_new_tokens=config.MAX_NEW_TOKENS,
