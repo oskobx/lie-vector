@@ -2,7 +2,7 @@
 
 The whole project on one page: what each phase is for, what it takes in and hands on, and the decisions already made that later phases must respect. Each phase still gets its own detailed spec (`docs/phaseN_spec.md`) before it starts; this file is the map, the spec is the instructions. When they disagree, the current phase spec wins, and this file gets updated.
 
-Last updated: 2026-10-24 (Phase 1 closed; Phase 2 started).
+Last updated: 2026-10-26 (direction names; Phase 2 progress).
 
 ## Research question
 
@@ -25,7 +25,7 @@ The answer may be in between; the Phase 4 span test quantifies how much of v_hon
 |---|---|
 | 0 Plumbing | closed 2026-10-01 |
 | 1 Measurement | closed 2026-10-24 (Gate 1 passed: 1-lead 56%, κ 0.92, self-κ 0.94) |
-| 2 Steering | in progress (started 2026-10-24) |
+| 2 Steering | in progress (started 2026-10-24): directions extracted (v_truth held-out AUROC 0.974); layer 18 chosen for both (pilot, spec §11); v_truth steers lying the "wrong" way (+v_truth → 96% lie; sign kept, honesty-ward side is −α) |
 | 3 Detection | not started |
 | 4 Geometry | not started |
 | 4.5 Scale check | optional, cut unless ahead |
@@ -83,7 +83,7 @@ Rerun Phases 1–3 unchanged on Qwen2.5-3B overnight. First thing to cut.
 ## Decisions later phases must respect
 
 - Model Qwen2.5-1.5B-Instruct, bfloat16 on MPS, greedy decoding, no quantization.
-- Direction names (renamed 2026-10-25): **v_truth** from true/false statements (knowing), **v_honesty** = honest − lie from the scenarios (telling). The lie direction is −v_honesty. Phase 0–1 documents use the old names (v_honesty for the truth direction, v_lie for the lie direction).
+- Direction names (renamed 2026-10-25): **v_truth** from true/false statements (knowing), **v_honesty** = honest − lie from the scenarios (telling). The lie direction is −v_honesty. v_truth keeps its sign (+ = toward "true"); steering toward "true" raises lying, so its honesty-ward side is −α (Phase 2 spec §11, 2026-10-26). Phase 0–1 documents use the old names (v_honesty for the truth direction, v_lie for the lie direction).
 - Directions extracted only on the **extract** split; all reported numbers on the **eval** split.
 - Every steering result has random-direction controls; every cosine has a random baseline.
 - Lie rates are reported over scenarios that pass level 0, and the goal-driven rate subtracts 0-lead.

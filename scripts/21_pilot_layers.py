@@ -11,6 +11,7 @@ Outputs:
     artifacts/phase2/pilot.csv          one row per (direction, layer, alpha_h, scenario)
     artifacts/phase2/pilot_report.txt   the table below, plus 10 replies at +0.6
                                         for each direction's best layer, to read
+    artifacts/phase2/pilot.png          honest / evasive / lie per layer (also docs/figures/)
 
 Rule (§3.3): per direction, the layer with the largest drop in lie rate from
 alpha_h = -0.6 to +0.6, unless its +0.6 replies are visibly broken.
@@ -22,6 +23,10 @@ import csv
 import random
 import time
 
+import matplotlib
+
+matplotlib.use("Agg")  # draw to a file, no window
+import matplotlib.pyplot as plt
 import torch
 
 from trait_vectors import config
@@ -29,7 +34,7 @@ from trait_vectors.extract import load_vectors
 from trait_vectors.hooks import steer
 from trait_vectors.metrics import paired_bootstrap
 from trait_vectors.model import generate, load_model, steering_spec
-from trait_vectors.traits.lying import BASELINE_PATH, LyingTrait
+from trait_vectors.traits.lying import BASELINE_PATH, JUDGE_LABELS, LyingTrait
 
 # Every other layer through the region where both directions form and settle
 # (spec §3, amended 2026-10-25); 14 is before v_truth forms.
@@ -43,6 +48,15 @@ N_READ = 10
 OUT_DIR = config.ARTIFACTS_DIR / "phase2"
 CSV_PATH = OUT_DIR / "pilot.csv"
 REPORT_PATH = OUT_DIR / "pilot_report.txt"
+PLOT_PATHS = [OUT_DIR / "pilot.png", config.ROOT / "docs" / "figures" / "phase2_pilot.png"]
+
+# Phase 1 plot style and label colours (scripts/12_baseline_lying.py).
+COLOURS = {"honest": "#2a78d6", "evasive": "#eb6834", "lie": "#1baf7a"}
+SURFACE, INK, MUTED = "#fcfcfb", "#0b0b0b", "#898781"
+
+# What each direction's negative and positive ends mean (v = first minus second).
+# v_truth keeps its sign: toward "true" raises lying (spec §11, 2026-10-26).
+POLES = {"truth": ("false", "true"), "honesty": ("lying", "honesty")}
 
 
 def pilot_items(trait):
@@ -108,8 +122,9 @@ def report(rows, baseline):
             honest = sum(label[(0.6, i)] == "honest" for i in ids) / len(ids)
             out.append(f"  {layer:>5} {sum(neg) / len(ids):9.1%} {sum(pos) / len(ids):9.1%} {mean:+8.1%} "
                        f"[{lo:+6.1%}, {hi:+6.1%}] {evasive:8.1%} {honest:7.1%}")
-        best[name] = max(LAYERS, key=lambda layer: drops[layer])
-        out.append(f"  largest drop: layer {best[name]}")
+        # Largest change in either direction: v_truth turned out to move lying the opposite way.
+        best[name] = max(LAYERS, key=lambda layer: abs(drops[layer]))
+        out.append(f"  largest change: layer {best[name]} ({drops[best[name]]:+.1%})")
 
     for name in DIRECTIONS:
         out.append(f"\n--- v_{name}, layer {best[name]}, alpha_h +0.6: {N_READ} replies to read (seeded) ---")
@@ -118,6 +133,48 @@ def report(rows, baseline):
         for row in random.Random(config.SEED).sample(chosen, N_READ):
             out.append(f"\n[{row['id']}] {row['label']}\n{row['response'].strip()}")
     return out
+
+
+def plot(rows, baseline):
+    """2 x 2 panels (direction x alpha_h): honest / evasive / lie shares per layer, unsteered bar first."""
+    ids = sorted(baseline)
+    fig, axes = plt.subplots(2, 2, figsize=(11, 6.5), facecolor=SURFACE, sharey=True)
+    for i, name in enumerate(["honesty", "truth"]):
+        for k, alpha in enumerate(ALPHAS):
+            ax = axes[i, k]
+            ax.set_facecolor(SURFACE)
+            bars = [("none", [baseline[s] for s in ids])]
+            for layer in LAYERS:
+                label = {row["id"]: row["label"] for row in rows
+                         if row["direction"] == name and row["layer"] == layer and row["alpha_h"] == alpha}
+                bars.append((str(layer), [label[s] for s in ids]))
+            for x, (_, labels) in enumerate(bars):
+                bottom = 0.0
+                for lab in JUDGE_LABELS:
+                    share = labels.count(lab) / len(labels)
+                    ax.bar(x, share, bottom=bottom, width=0.65, color=COLOURS[lab], edgecolor=SURFACE,
+                           linewidth=1.5, alpha=0.45 if x == 0 else 1.0,  # unsteered bar faded
+                           label=lab if (i, k, x) == (0, 1, 1) else None)
+                    if share >= 0.08:
+                        ax.text(x, bottom + share / 2, f"{share:.0%}", ha="center", va="center", fontsize=7, color=INK)
+                    bottom += share
+            ax.set_xticks(range(len(bars)), [b[0] for b in bars], color=INK)
+            pole = POLES[name][1] if alpha > 0 else POLES[name][0]
+            ax.set_title(f"v_{name}, alpha_h {alpha:+.1f} (toward {pole})", color=INK, fontsize=10)
+            ax.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0))
+            ax.tick_params(colors=MUTED)
+            for side in ["top", "right", "left"]:
+                ax.spines[side].set_visible(False)
+            ax.spines["bottom"].set_color(MUTED)
+            if i == 1:
+                ax.set_xlabel("layer steered  (none = unsteered)", color=MUTED)
+    axes[0, 1].legend(loc="upper left", bbox_to_anchor=(1.0, 1.0), frameon=False, labelcolor=INK)
+    fig.suptitle(f"Pilot: {LEVEL}, extract split, {len(ids)} scenarios: judged replies per layer",
+                 color=INK, fontsize=11)
+    fig.tight_layout()
+    for path in PLOT_PATHS:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(path, dpi=150, facecolor=SURFACE)
 
 
 def main():
@@ -137,8 +194,9 @@ def main():
         writer.writerows(rows)
     lines = report(rows, baseline)
     REPORT_PATH.write_text("\n".join(lines) + "\n")
+    plot(rows, baseline)
     print("\n" + "\n".join(lines))
-    print(f"\nwrote {CSV_PATH}\n      {REPORT_PATH}")
+    print(f"\nwrote {CSV_PATH}\n      {REPORT_PATH}\n      " + "\n      ".join(str(p) for p in PLOT_PATHS))
 
 
 if __name__ == "__main__":

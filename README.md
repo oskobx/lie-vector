@@ -1,4 +1,4 @@
-# trait-vectors
+# lie-vector
 
 Steering vectors in the residual stream of `Qwen/Qwen2.5-1.5B-Instruct`.
 We read directions out of the model's activations and add them back during

@@ -1,5 +1,7 @@
 # Phase 1 spec: data and scoring (timebox: 7 days, gate at day 5)
 
+> **Closed 2026-10-24. Renamed afterwards (2026-10-25, see `docs/roadmap.md`):** this spec's "v_honesty" (from true/false statements) is now **v_truth**, with `traits/honesty.py` → `traits/truth.py` and `data/honesty/` → `data/truth/`; its "v_lie" is now **−v_honesty**, where v_honesty = honest − lie from the scenarios. The text below keeps the names used at the time.
+
 Goal: measure the unsteered behaviour. By the end we know the lie / evasion / honest rates of Qwen2.5-1.5B-Instruct at four pressure levels, with a judge we trust, plus contrast data for v_syc and v_honesty. (The sycophancy flip rate planned as insurance was dropped, §11.) No steering in this phase. Gate 1 (section 7) decides whether lying stays the main trait.
 
 Inherited from Phase 0 and not to be changed: hook API, `Trait` protocol, `extract.py`, config conventions, greedy decoding, the α bound |α| ≤ 0.6 at layer 18 (not used here).
