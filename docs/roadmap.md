@@ -25,7 +25,7 @@ The answer may be in between; the Phase 4 span test quantifies how much of v_hon
 |---|---|
 | 0 Plumbing | closed 2026-10-01 |
 | 1 Measurement | closed 2026-10-24 (Gate 1 passed: 1-lead 56%, κ 0.92, self-κ 0.94) |
-| 2 Steering | in progress (started 2026-10-24): directions extracted (v_truth held-out AUROC 0.974); layer 18 chosen for both (pilot, spec §11); v_truth steers lying the "wrong" way (+v_truth → 96% lie; sign kept, honesty-ward side is −α) |
+| 2 Steering | in progress (started 2026-10-24): directions extracted (v_truth held-out AUROC 0.974); layer 18 chosen for both (pilot, spec §11); v_truth steers lying the "wrong" way (+v_truth → 96% lie; sign kept, honesty-ward side is −α); §5 sweep and §5.2 goal pursuit done (honesty-ward pushes stop goal pursuit; goal judge κ 0.66); post-hoc: v_honesty pushes "No", negated leading questions confound the lie labels, so §10 true-lead treated as required (spec §11, 2026-10-27) |
 | 3 Detection | not started |
 | 4 Geometry | not started |
 | 4.5 Scale check | optional, cut unless ahead |
