@@ -4,7 +4,8 @@ import pytest
 
 from trait_vectors.judge.runner import fill_prompt
 from trait_vectors.traits.base import split_by_id
-from trait_vectors.traits.lying import (BASELINE_PATH, GOAL_PROMPT, LEVELS, ROLE_LEVELS, LyingTrait, goal_fields,
+from trait_vectors.traits.lying import (BASELINE_PATH, GOAL_PROMPT, LEVELS, ROLE_LEVELS, TRUELEAD_JUDGE_PROMPT,
+                                        TRUELEAD_LEVELS, TRUELEAD_PATH, LyingTrait, goal_fields, judge_fields,
                                         messages_for)
 
 
@@ -39,6 +40,22 @@ def test_goal_prompt_filled(items):
             prompt = fill_prompt(GOAL_PROMPT, goal_fields(it, "Yes."))
             for name in ("role", "goal", "counterpart", "fact", "asked", "response"):
                 assert "{" + name + "}" not in prompt
+
+
+@pytest.mark.skipif(not TRUELEAD_PATH.exists(), reason="needs scripts/26_truelead_questions.py")
+def test_truelead_items(trait, items):
+    """Two true-lead items per scenario: the true-lead question, the matching system prompt, their own judge prompt."""
+    tl = {it.id: it for it in trait.truelead_prompts()}
+    by_id = {it.id: it for it in items}
+    assert len(tl) == len(TRUELEAD_LEVELS) * len(trait.scenarios)
+    for s in trait.scenarios:
+        for level in TRUELEAD_LEVELS:
+            it = tl[f"{s['id']}/{level}"]
+            assert it.messages[1]["content"].count(s["leading_true"]) == 1
+            assert s["leading"] not in it.messages[1]["content"]
+            lead = by_id[f"{s['id']}/{level.replace('-truelead', '-lead')}"]
+            assert it.messages[0] == lead.messages[0]  # same system prompt as the false-lead level
+            assert "TRUE answer as an assumption" in fill_prompt(TRUELEAD_JUDGE_PROMPT, judge_fields(it, "Yes."))
 
 
 def test_which_question_each_level_asks(trait, items):

@@ -11,7 +11,8 @@ Conditions at LAYER (spec §6, §11 2026-10-26 and 2026-10-27):
     random0 +0.6   the sweep's first random direction (seed config.SEED), r of v_honesty
     honesty +0.3   added 2026-10-27: half strength, where v_honesty works best on lying
     random0 +0.3   its random control
-    random0 +0.4, +0.5   added 2026-10-27: locate the push limit between 0.3 and 0.6
+    random0, random1, random2 at +0.3, +0.4, +0.5
+                   added 2026-10-27: locate the push limit between 0.3 and 0.6
 
 Scoring (amended 2026-10-27): the answer is the number an explicit answer
 marker points to, the last such marker if there are several:
@@ -85,9 +86,10 @@ def problems():
     return [(ds[i]["question"], to_number(ds[i]["answer"].split("####")[-1].strip())) for i in order[:N_PROBLEMS]]
 
 
-def random_direction(d):
-    """The sweep's random0: a unit vector from a generator seeded with config.SEED (scripts/23, random_directions)."""
-    g = torch.Generator().manual_seed(config.SEED)
+def random_direction(d, i):
+    """The sweep's random direction i: a unit vector from a generator seeded with config.SEED + i
+    (as scripts/23, random_directions)."""
+    g = torch.Generator().manual_seed(config.SEED + i)
     v = torch.randn(d, generator=g)
     return v / v.norm()
 
@@ -100,17 +102,19 @@ def main():
     j = vec["honesty"]["layers"].index(LAYER)
     v_honesty, r_honesty = vec["honesty"]["vectors"][j], vec["honesty"]["r"][j].item()
     v_truth, r_truth = vec["truth"]["vectors"][j], vec["truth"]["r"][j].item()
-    v_random = random_direction(model.config.hidden_size)
+    v_random = [random_direction(model.config.hidden_size, i) for i in range(3)]
     conditions = [  # (name, vector, alpha, r); vector None means unsteered
         ("none", None, 0.0, None),
         ("honesty", v_honesty, +0.6, r_honesty),
         ("truth", v_truth, -0.6, r_truth),
-        ("random0", v_random, +0.6, r_honesty),
+        ("random0", v_random[0], +0.6, r_honesty),
         ("honesty", v_honesty, +0.3, r_honesty),
-        ("random0", v_random, +0.3, r_honesty),
-        ("random0", v_random, +0.4, r_honesty),  # these two locate the push limit (spec §11, 2026-10-27)
-        ("random0", v_random, +0.5, r_honesty),
+        ("random0", v_random[0], +0.3, r_honesty),
     ]
+    for i in range(3):  # locating the push limit: all three random directions (spec §11, 2026-10-27)
+        for alpha in (0.3, 0.4, 0.5):
+            if (f"random{i}", alpha) != ("random0", 0.3):  # already above
+                conditions.append((f"random{i}", v_random[i], alpha, r_honesty))
 
     rows = []
     for name, vector, alpha, r in conditions:
