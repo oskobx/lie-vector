@@ -25,7 +25,7 @@ The answer may be in between; the Phase 4 span test quantifies how much of v_hon
 |---|---|
 | 0 Plumbing | closed 2026-10-01 |
 | 1 Measurement | closed 2026-10-24 (Gate 1 passed: 1-lead 56%, κ 0.92, self-κ 0.94) |
-| 2 Steering | all runs done, Gate 2 and Gate 2b decided 2026-10-28: **null** (handoff pending). Layer 18, push limit 0.3 (measured on random directions; 0.6 from Phase 0 was too generous). Gate 2 (1-lead) fails for v_honesty and v_truth at 0.6 (primary) and 0.3 (post hoc), on the random control (random2 at −0.3: +26.6). 1-lead lying is mostly deference (true-lead 54% vs 6%). **Phase 2b** (neutral questions, `docs/phase2b_spec.md`): Gate 2b fails for v_honesty, v_truth and the new v_honesty_neutral. Every direction acts as a Yes ↔ No tilt: v_honesty "say No", v_honesty_neutral "say Yes", v_truth a strong Yes ↔ No dial. Spec §11, 2026-10-28 |
+| 2 Steering | closed 2026-10-28: Gate 2 and Gate 2b **null**. Layer 18, push limit 0.3 (measured on random directions; 0.6 from Phase 0 was too generous). Gate 2 (1-lead) fails for v_honesty and v_truth at 0.6 (primary) and 0.3 (post hoc), on the random control (random2 at −0.3: +26.6). 1-lead lying is mostly deference (true-lead 54% vs 6%). **Phase 2b** (neutral questions, `docs/phase2b_spec.md`): Gate 2b fails for v_honesty, v_truth and the new v_honesty_neutral. Every direction acts as a Yes ↔ No tilt: v_honesty "say No", v_honesty_neutral "say Yes", v_truth a strong Yes ↔ No dial. Spec §11, 2026-10-28 |
 | 3 Detection | not started |
 | 4 Geometry | not started |
 | 4.5 Scale check | optional, cut unless ahead |
@@ -47,7 +47,7 @@ Build the instrument: scenarios, judge, unsteered baselines.
 - Contrast data, loaded but not extracted: `traits/truth.py` (Geometry of Truth true/false statements), `traits/sycophancy.py` (CAA A/B pairs, returned as chats with a partial assistant turn).
 **Gate 1:** level-0 pass ≥ 60% · lie rate at 1-lead or 2-lead in [15%, 85%] · judge κ ≥ 0.6 or within 0.1 of self-κ. Fail after half a day of tuning → choose a fallback trait then. **Passed 2026-10-23** (eval split: 92.9%, 55.7%, κ 0.92).
 
-### 2 — Steering · spec: `docs/phase2_spec.md`
+### 2 — Steering (closed) · specs: `docs/phase2_spec.md`, `docs/phase2b_spec.md`
 Extract directions on the **extract** split, steer on the **eval** split, measure what changes.
 - **Directions:** v_truth (true vs. false statements, no goals), v_honesty (from the scenarios: prompts answered honestly minus prompts lied to, stratified by the six role levels; spec §2.2), v_syc (CAA), v_goal only if time allows.
 - **Layer choice:** extraction statistics first (‖v_ℓ‖/r_ℓ, cross-layer cosine), then a small α sweep at 2–3 candidate layers at 1-lead only; full sweep only at the chosen layer.
