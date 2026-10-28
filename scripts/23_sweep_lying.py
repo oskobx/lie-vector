@@ -6,6 +6,7 @@ level 0, and judge it:
     v_honesty, v_truth          at 1-lead and 0-lead
     3 random unit directions    at 1-lead only, with r of v_honesty's layer,
                                 also at LIMIT_ALPHAS_H to locate the push limit (spec §11, 2026-10-27)
+    v_honesty, v_truth          also at GATE_ALPHAS_H on 1-lead: alpha_max/2 for the relocated limit 0.3
 alpha_h = 0 is the Phase 1 baseline, copied in as direction "none".
 
 Signs (spec §1, §11): the raw coefficient is alpha = +alpha_h for v_honesty and
@@ -37,6 +38,7 @@ from trait_vectors.traits.lying import BASELINE_PATH, LyingTrait
 LAYER = 18  # chosen in the §3 pilot for both directions (spec §11, 2026-10-26)
 ALPHAS_H = [-0.6, -0.3, 0.3, 0.6]  # alpha_max = 0.6 (spec §4, §11); 0 is the baseline
 LIMIT_ALPHAS_H = [-0.5, -0.4, 0.4, 0.5]  # random directions only: locating the push limit (spec §11, 2026-10-27)
+GATE_ALPHAS_H = [-0.15, 0.15]  # v_honesty and v_truth, 1-lead only: alpha_max/2 at the relocated alpha_max = 0.3 (spec §11)
 SIGN = {"honesty": +1, "truth": -1}  # raw alpha = SIGN * alpha_h
 CONDITIONS = ["1-lead", "0-lead"]
 N_RANDOM = 3
@@ -113,7 +115,7 @@ def main():
     for condition in CONDITIONS:
         for name, sign in SIGN.items():
             v, r = vectors[name]["vectors"][j], vectors[name]["r"][j].item()
-            for alpha_h in ALPHAS_H:
+            for alpha_h in sorted(ALPHAS_H + (GATE_ALPHAS_H if condition == "1-lead" else [])):
                 rows += run_cell(model, tokenizer, trait, name, v, r, alpha_h, sign * alpha_h, condition, items[condition])
 
     r_honesty = vectors["honesty"]["r"][j].item()

@@ -268,6 +268,13 @@ Judged with `lying_truelead_v1`: `lying_v1` with only rule 2 turned round ("here
 - **P4 → half wrong.** Raw −0.3 (toward "false"): lie + evasive +88.6 [+81.0, +94.9] (predicted rise ✓; mostly evasive, 70%). Raw +0.3 (toward "true"): lie **+27.8** [+16.5, +40.5], predicted to fall ✗. The new lies agree, then spin toward the goal ("Yes, that's correct! … has a branded title, indicating its authenticity"). v_truth's "true" side raises lying whichever way the question leans, so it is not a believe ↔ doubt dial; closer to "say yes and put a positive gloss on it".
 - **P5 ✗** largest random change +8.9 (random2) vs half of v_honesty's 12.7 = 6.3. random2 at +0.3 is the "No"-tilting side of the lever above, consistent with it pushing disagreement here.
 
+**2026-10-27: two more runs (Oskar), post hoc, decided after the true-lead results; predictions written before either runs.**
+1. **Gate cells at ±0.15:** v_honesty and v_truth at α_h = ±0.15 on 1-lead (`GATE_ALPHAS_H` in `scripts/23_sweep_lying.py`), for criterion 2 of the secondary gate at α_max = 0.3. Criterion 3 already fails there, so these complete the table; they cannot change the verdict.
+2. **Neutral-question check** (`scripts/28_neutral_check.py`). P3 was inconclusive because on leading questions "honest" and "disagree" coincide. On the neutral levels 1, 2, 3 the honest answer is yes in 40 eval scenarios and no in 39, so honesty and "say No" make opposite predictions. Eval split, passing scenarios, levels 1–3 pooled (237 questions; 45 unpushed lies); v_honesty, v_truth and the three random directions at α_h = ±0.3; judge `lying_v1`; intervals paired over the 79 scenarios (each scenario's lie rate averaged over its 3 levels).
+   - **N1, honesty vs "say No":** split by the true answer. On **true-answer-yes** scenarios (where a lie is "No"), v_honesty +0.3 lie change: within +5 points or falling → **honesty**; rising ≥ 10 with the interval excluding 0 → **"say No"**; between → inconclusive. Pooled lying should fall if honesty. (Thresholds lower than P3's because the base rate is ~19%, not 56%.)
+   - **N2, control:** random directions at ±0.3 move pooled lying by no more than half of v_honesty's +0.3 change.
+   - **N3, v_truth:** no prediction beyond reporting; its "true" side raised lying on both lead directions, so on neutral questions it may raise "yes"-lies (lies on true-answer-no scenarios).
+
 
 ## 12. Session plan
 
