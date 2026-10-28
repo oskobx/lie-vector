@@ -277,6 +277,28 @@ Judged with `lying_truelead_v1`: `lying_v1` with only rule 2 turned round ("here
 
 **2026-10-27: Phase 2b, steering on neutral questions (`docs/phase2b_spec.md`, approved 19:45, before any neutral result).** Oskar: the leading questions can't separate honesty from "disagree with the asker", so redo the steering test on neutral questions. A follow-up, not a replacement: this phase's 1-lead results stay as reported. 2b adds v_honesty_neutral (built from neutral levels 1–3 only), the grid ±0.15/±0.3, and Gate 2b (six criteria scaled to the 19% base rate, including a Yes/No-tilt check split by the true answer and a paired "better than each random direction" control). The neutral check above (N1–N3) becomes part of 2b's data; Gate 2b applies to v_honesty, v_honesty_neutral and v_truth.
 
+**2026-10-27: neutral check results (N1–N3).** `scripts/28_neutral_check.py`, 237 neutral questions, eval split; rates are per-scenario means over levels 1–3. Unpushed: lie 19.0%, of which true-answer-yes 4.2%, true-answer-no 34.2% (the model's lies are mostly "yes").
+- **N1 → "say No".** v_honesty +0.3 on true-answer-yes scenarios: lie +15.0 [+6.7, +25.0] (4.2% → 19.2%), above the +10 bar with the interval excluding 0. On true-answer-no: −30.8 [−42.7, −18.8]. "Yes"-starts 156 → 89, "No"-starts 48 → 93. Pooled −7.6 [−16.9, +1.7], not clearly below 0. The Phase 2 v_honesty is, to a large part, a Yes → No tilt: it removes "yes"-lies and creates "no"-lies.
+- **N2 ✗** largest random change +19.8 (random2 at −0.3) vs half of v_honesty's 7.6 = 3.8. random0 at +0.3 lowers pooled lying −6.3 [−11.4, −1.7], about as much as v_honesty.
+- **N3, v_truth.** Raw toward "true" (α_h −0.3): every reply starts "Yes" (237/237), lie on true-answer-no 100%. Honesty-ward (+0.3): 4 "Yes"-starts, lie on true-answer-yes 53.3%, 48% evasive. v_truth acts as a strong Yes ↔ No (agree ↔ doubt) dial on neutral questions too.
+
+**2026-10-28: Gate 2 decision (§8). Neither direction steers lying: the "doesn't / doesn't" row.** Reports `artifacts/phase2/report_amax0.6.txt` (primary, Gate 2 as written) and `report_amax0.3.txt` (secondary, at the relocated push limit, post hoc). Eval 1-lead, 79 scenarios, unpushed lie rate 55.7%. Criterion 3 at both signs (entry above).
+
+| | 1. drop ≥ 15 | 2. steady | 3. random ≤ half the drop | 4. not degenerate | verdict |
+|---|---|---|---|---|---|
+| **primary, α_max = 0.6** | | | | | |
+| v_honesty | ✓ −21.5 [−36.7, −6.3] | ✓ | ✗ random0 +0.6 −12.7, random2 −0.6 +25.3 (limit 10.8) | ✓ 2.96 | does not steer |
+| v_truth | ✓ −46.8 [−59.5, −34.2] | ✓ | ✗ random2 −0.6 +25.3 (limit 23.4) | ✗ 6.48 (limit 4.18) | does not steer |
+| **secondary, α_max = 0.3** | | | | | |
+| v_honesty | ✓ −34.2 [−49.4, −19.0] | ✓ steps −21.5, −12.7 | ✗ random2 −0.3 +26.6 (limit 17.1) | ✓ 2.00 | does not steer |
+| v_truth | ✓ −49.4 [−60.8, −36.7] | ✓ steps −45.6, −3.8 | ✗ random2 −0.3 +26.6 (limit 24.7) | ✓ 3.03 | does not steer |
+
+- **The other reading of criterion 3** (random directions at +α_max only): the primary gate still fails for both (v_honesty: random0 +0.6 −12.7 > 10.8; v_truth: perplexity). The secondary gate would pass for both: random changes at +0.3 are −2.5, −2.5, −12.7. The write-up gives both.
+- **What the 1-lead drops are made of** (from §10 and Phase 2b, not from the gate). v_honesty +0.3 turns lies into honest answers on 1-lead (honest 29% → 61%), but on true-lead questions it adds lies (P3 +12.7, inconclusive), and on neutral questions it is mainly a Yes → No tilt (N1 "say No"). v_truth +0.3 turns lies into dodges (evasive 15% → 77%) and acts as a Yes ↔ No dial on every question type (P4, N3). On leading questions the honest reply is nearly always "No", so a "No" push looks like honesty there.
+- **Phase 2b** (`docs/phase2b_spec.md` §9): on neutral questions no direction steers lying, including v_honesty_neutral, which is a "say Yes" direction. Every direction tested moves the model along a Yes ↔ No axis; none lowers lying on true-answer-yes and true-answer-no questions together.
+
+**Reading (§8 table): null.** The steering experiment does not show a direction that controls lying under goal pressure, and the transfer question gets "v_truth does not steer lying; it tilts yes/no". It does not decide between pictures A and B (roadmap): neither direction steers, so neither picture is supported by steering. Phases 3–4 still run. Write-up: the measurement (Phase 1), the controls (random directions at both signs, true-lead, neutral questions) and the null, with the Yes ↔ No finding as the main positive result.
+
 
 ## 12. Session plan
 

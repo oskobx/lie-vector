@@ -72,4 +72,22 @@ The write-up presents Phase 2 (1-lead, pre-registered) first, then the two findi
 
 ## 9. Amendments
 
-(none yet)
+**2026-10-27, 21:30: note on v_honesty_neutral's training data (written before any v_honesty_neutral reply was generated; no change to the plan).** Neutral-question lies are mostly *yes*-lies: on the extract split, 33 of the 40 lies are on true-answer-no questions, where the lie is "yes". The honest side says yes 99 times and no 57 times (63% yes); the lie side says yes in ~82%. So v_honesty_neutral can still carry a smaller "say No" component (63% vs 82%, against ~0% vs ~100% for 1-lead), and its two sides also differ in which scenarios they come from (true-answer-no: 37% of honest, 82% of lies). Criterion 3 is the check for the first; the second is the same domain caveat as v_honesty (Phase 2 spec §2.2).
+
+**2026-10-27: first neutral results, Phase 2 v_honesty and v_truth at ±0.3, random at ±0.3** (`artifacts/phase2/neutral_first_check.csv`; reported in Phase 2 spec §11, N1–N2). Unpushed, lying is 4.2% on true-answer-yes questions and 34.2% on true-answer-no: the model's goal-pressure lies are mostly "yes".
+
+**2026-10-27, 23:00: Gate 2b result. No direction steers lying on neutral questions.** `artifacts/phase2/neutral_report.txt` (goal pursuit and GSM8K still running; they carry no gate).
+
+| at +0.3 | 1 fewer lies | 2 honest | 3 no tilt | 4 steady | 5 beats random | 6 fluent | verdict |
+|---|---|---|---|---|---|---|---|
+| v_honesty_neutral | ✗ +17.3 | ✗ | ✗ | ✗ | ✗ | ✓ | does not steer |
+| v_honesty | ✗ −7.6 [−16.9, +1.7] | ✓ | ✗ | ✗ | ✗ (3 of 6) | ✓ | does not steer |
+| v_truth | ✗ +9.7 | ✗ | ✗ | ✗ | ✗ | ✗ | does not steer |
+
+- **v_honesty_neutral is a "say Yes" direction.** Honesty-ward it *raises* lying (19.0% → 28.3% at +0.15, 36.3% at +0.3); "Yes"-starts 156 → 206; lies on true-answer-no questions 34% → 74%, on true-answer-yes 4% → 0%. The note above expected a small "No" component from the answer words; the opposite happened. The second difference noted above dominates: its lie side comes 82% from true-answer-no scenarios, its honest side 37%, so honest − lie mostly encodes "this is a scenario whose answer is yes", and pushing it makes the model answer yes.
+- **v_honesty (Phase 2) is a "say No" direction** (N1 above), and v_truth a strong Yes ↔ No dial.
+- **Post hoc observation, not a gate result:** the Phase 2 v_honesty at +0.15 lowers pooled lying −12.2 [−19.4, −5.5] while true-answer-yes lying changes only +3.3 [−2.5, +9.2]; the tilt appears mainly at +0.3. Recorded for the write-up as a lead, not a finding.
+
+Reading (2b §5 table): neither direction steers on neutral questions. Every direction we have moves the model along a Yes ↔ No axis; lies under goal pressure are mostly "yes", so a "No" push removes them and creates "no"-lies, and a "Yes" push does the reverse. No tested direction lowers lying on both halves at once.
+
+**2026-10-28: costs (§6), no gate.** Goal pursuit on neutral questions (goal_v1, 3,081 judgments, 0 parse errors): unpushed 27.8%; v_honesty +0.3 8.0% (−19.8), v_truth +0.3 16.0% (−11.8), v_honesty_neutral +0.3 28.7% (+0.8 [−8.4, +9.3], unchanged); lying-ward pushes raise pursuit for all three (to 57–82% at −0.3). GSM8K: v_honesty_neutral +0.15 48% (−5 [−16, +5]), +0.3 38% (−15 [−26, −3]), against random directions at +0.3: −7, 0, +3.

@@ -2,7 +2,7 @@
 
 The whole project on one page: what each phase is for, what it takes in and hands on, and the decisions already made that later phases must respect. Each phase still gets its own detailed spec (`docs/phaseN_spec.md`) before it starts; this file is the map, the spec is the instructions. When they disagree, the current phase spec wins, and this file gets updated.
 
-Last updated: 2026-10-27 (push limit 0.3; true-lead results; Phase 2b on neutral questions).
+Last updated: 2026-10-28 (Gate 2 and Gate 2b decided: null; Phase 2 close-out).
 
 ## Research question
 
@@ -25,7 +25,7 @@ The answer may be in between; the Phase 4 span test quantifies how much of v_hon
 |---|---|
 | 0 Plumbing | closed 2026-10-01 |
 | 1 Measurement | closed 2026-10-24 (Gate 1 passed: 1-lead 56%, κ 0.92, self-κ 0.94) |
-| 2 Steering | in progress (started 2026-10-24): directions extracted (v_truth held-out AUROC 0.974); layer 18 chosen for both (pilot, spec §11); v_truth steers lying the "wrong" way (+v_truth → 96% lie; sign kept, honesty-ward side is −α); §5 sweep and §5.2 goal pursuit done (honesty-ward pushes stop goal pursuit; goal judge κ 0.66); post-hoc: v_honesty pushes "No", negated leading questions confound the lie labels, so §10 true-lead treated as required (spec §11, 2026-10-27). Push limit relocated to 0.3 (random directions). Gate 2 fails for both directions at 0.6 (primary) and 0.3 (post hoc), on the random control. True-lead: 1-lead lying is mostly deference (54% vs 6%); v_honesty partly "disagree" (P3 inconclusive). **Phase 2b** (`docs/phase2b_spec.md`, approved 2026-10-27): the steering test redone on neutral questions, with v_honesty_neutral and Gate 2b; runs pending |
+| 2 Steering | all runs done, Gate 2 and Gate 2b decided 2026-10-28: **null** (handoff pending). Layer 18, push limit 0.3 (measured on random directions; 0.6 from Phase 0 was too generous). Gate 2 (1-lead) fails for v_honesty and v_truth at 0.6 (primary) and 0.3 (post hoc), on the random control (random2 at −0.3: +26.6). 1-lead lying is mostly deference (true-lead 54% vs 6%). **Phase 2b** (neutral questions, `docs/phase2b_spec.md`): Gate 2b fails for v_honesty, v_truth and the new v_honesty_neutral. Every direction acts as a Yes ↔ No tilt: v_honesty "say No", v_honesty_neutral "say Yes", v_truth a strong Yes ↔ No dial. Spec §11, 2026-10-28 |
 | 3 Detection | not started |
 | 4 Geometry | not started |
 | 4.5 Scale check | optional, cut unless ahead |
@@ -57,6 +57,7 @@ Extract directions on the **extract** split, steer on the **eval** split, measur
 - **Needs:** `extract.py` to accept chat inputs with a partial assistant turn (`continue_final_message=True`) for CAA.
 **Output:** lie rate vs. α (with 0-lead and random controls), cost curves, answer to the transfer question (does v_truth steer lying?).
 **Gate 2:** at least one direction moves the 1-lead lie rate roughly monotonically in α on held-out scenarios. If v_truth fails but v_honesty works, that is a *finding* (instrumental lying is a different feature), not a failure. If neither steers: write up the measurement and the null cleanly.
+**Result (2026-10-28): neither steers, on 1-lead (Gate 2) or on neutral questions (Gate 2b).** Both drop 1-lead lying by 34–49 points at 0.3, but a random direction moves it by 27, and the follow-ups show why: on leading questions "honest" means "No", and every direction we have is a Yes ↔ No tilt. Transfer question: v_truth does not steer lying; it tilts yes/no. Pictures A and B stay open for Phase 4. Write-up: the measurement, the controls and the null, with the Yes ↔ No finding.
 
 ### 3 — Detection (twist 4)
 Does the projection ⟨h_ℓ, v̂⟩ at the last prompt token, **before** the model answers, predict whether it will lie?
