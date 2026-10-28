@@ -2,7 +2,7 @@
 
 Research-style portfolio project. We extract directions in the residual stream of Qwen2.5-1.5B-Instruct and add them during generation to change behavior. No training anywhere, only forward passes with PyTorch hooks.
 
-Current phase: **Phase 2** (steering). The spec is `docs/phase2_spec.md`. Follow it exactly. Phase 1 is closed. Earlier specs (`docs/phase0_spec.md`, `docs/phase1_spec.md`) are for reference; handoffs are in `docs/private/handoffs/`.
+Current phase: **Phase 2** (steering). The spec is `docs/phase2_spec.md`, plus its follow-up `docs/phase2b_spec.md` (steering on neutral questions, approved 2026-10-27). Follow them exactly. Phase 1 is closed. Earlier specs (`docs/phase0_spec.md`, `docs/phase1_spec.md`) are for reference; handoffs are in `docs/private/handoffs/`.
 
 The whole project, all phases and the decisions later phases must respect, is in `docs/roadmap.md`. Read it at the start of each session; update its Status table when a phase or gate changes, and its decisions list when a spec amendment affects later phases.
 

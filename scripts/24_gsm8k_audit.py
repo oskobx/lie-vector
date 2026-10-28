@@ -13,6 +13,8 @@ Conditions at LAYER (spec §6, §11 2026-10-26 and 2026-10-27):
     random0 +0.3   its random control
     random0, random1, random2 at +0.3, +0.4, +0.5
                    added 2026-10-27: locate the push limit between 0.3 and 0.6
+    honesty_neutral +0.15, +0.3
+                   Phase 2b §6: v_honesty_neutral (from neutral questions only), at its grid
 
 Scoring (amended 2026-10-27): the answer is the number an explicit answer
 marker points to, the last such marker if there are several:
@@ -115,6 +117,10 @@ def main():
         for alpha in (0.3, 0.4, 0.5):
             if (f"random{i}", alpha) != ("random0", 0.3):  # already above
                 conditions.append((f"random{i}", v_random[i], alpha, r_honesty))
+    neutral = load_vectors(config.ARTIFACTS_DIR / "vectors" / "honesty_neutral.pt")  # Phase 2b §6
+    jn = neutral["layers"].index(LAYER)
+    for alpha in (0.15, 0.3):
+        conditions.append(("honesty_neutral", neutral["vectors"][jn], alpha, neutral["r"][jn].item()))
 
     rows = []
     for name, vector, alpha, r in conditions:

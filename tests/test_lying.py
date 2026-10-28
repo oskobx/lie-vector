@@ -99,6 +99,13 @@ def test_honesty_strata(trait):
         assert not {str(m) for m in honest} & {str(m) for m in lie}  # a reply is either honest or a lie
 
 
+@pytest.mark.skipif(not BASELINE_PATH.exists(), reason="needs the Phase 1 baseline (scripts/12_baseline_lying.py)")
+def test_neutral_strata(trait):
+    """Phase 2b §3: v_honesty_neutral uses the neutral levels only, with the counts in the spec."""
+    counts = {level: (len(h), len(d)) for level, (h, d) in trait.extraction_strata(["1", "2", "3"]).items()}
+    assert counts == {"1": (58, 15), "2": (57, 14), "3": (41, 11)}
+
+
 def test_split_by_scenario(trait, items):
     """All levels share their scenario's split, the one recorded in scenarios.json."""
     recorded = {s["id"]: s["split"] for s in trait.scenarios}

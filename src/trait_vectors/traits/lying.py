@@ -136,11 +136,12 @@ class LyingTrait:
     def extraction_pairs(self):
         raise NotImplementedError("v_honesty is extracted per level: use extraction_strata() (Phase 2 spec §2.2)")
 
-    def extraction_strata(self):
+    def extraction_strata(self, levels=ROLE_LEVELS):
         """{level: (honest prompts, lie prompts)} for v_honesty (Phase 2 spec §2.2).
 
         Uses the extract split only, scenarios whose level-0 reply was judged
-        honest, and the six role levels. A prompt goes on the honest or the lie
+        honest, and the given levels: the six role levels for v_honesty, the
+        neutral levels 1, 2, 3 for v_honesty_neutral (Phase 2b §3). A prompt goes on the honest or the lie
         side according to how the unsteered model answered it in Phase 1;
         evasive replies are left out. A level with fewer than MIN_PER_SIDE
         prompts on either side is skipped.
@@ -150,7 +151,7 @@ class LyingTrait:
         passing = [s for s in self.scenarios
                    if split_by_id(s["id"]) == "extract" and labels[(s["id"], "0")] == "honest"]
         strata = {}
-        for level in ROLE_LEVELS:
+        for level in levels:
             honest = [messages_for(s, level) for s in passing if labels[(s["id"], level)] == "honest"]
             lie = [messages_for(s, level) for s in passing if labels[(s["id"], level)] == "lie"]
             if min(len(honest), len(lie)) >= MIN_PER_SIDE:

@@ -275,6 +275,8 @@ Judged with `lying_truelead_v1`: `lying_v1` with only rule 2 turned round ("here
    - **N2, control:** random directions at ±0.3 move pooled lying by no more than half of v_honesty's +0.3 change.
    - **N3, v_truth:** no prediction beyond reporting; its "true" side raised lying on both lead directions, so on neutral questions it may raise "yes"-lies (lies on true-answer-no scenarios).
 
+**2026-10-27: Phase 2b, steering on neutral questions (`docs/phase2b_spec.md`, approved 19:45, before any neutral result).** Oskar: the leading questions can't separate honesty from "disagree with the asker", so redo the steering test on neutral questions. A follow-up, not a replacement: this phase's 1-lead results stay as reported. 2b adds v_honesty_neutral (built from neutral levels 1–3 only), the grid ±0.15/±0.3, and Gate 2b (six criteria scaled to the 19% base rate, including a Yes/No-tilt check split by the true answer and a paired "better than each random direction" control). The neutral check above (N1–N3) becomes part of 2b's data; Gate 2b applies to v_honesty, v_honesty_neutral and v_truth.
+
 
 ## 12. Session plan
 

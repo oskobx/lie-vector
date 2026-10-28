@@ -52,7 +52,8 @@ GSM8K_PATH = OUT_DIR / "gsm8k.csv"
 DIRECTIONS = ["honesty", "truth"]
 RANDOMS = ["random0", "random1", "random2"]
 CONDITIONS = ["1-lead", "0-lead"]
-SIGN = {"honesty": +1, "truth": -1, "random0": +1, "random1": +1, "random2": +1}  # raw alpha = SIGN * alpha_h
+SIGN = {"honesty": +1, "truth": -1, "random0": +1, "random1": +1, "random2": +1,
+        "honesty_neutral": +1}  # raw alpha = SIGN * alpha_h; honesty_neutral is Phase 2b's (GSM8K only here)
 N_EXAMPLES = 5
 
 # Phase 1 plot style (scripts/12_baseline_lying.py); the two directions take the first two categorical colours.
