@@ -26,7 +26,7 @@ The answer may be in between; the Phase 4 span test quantifies how much of v_hon
 | 0 Plumbing | closed 2026-10-01 |
 | 1 Measurement | closed 2026-10-24 (Gate 1 passed: 1-lead 56%, κ 0.92, self-κ 0.94) |
 | 2 Steering | closed 2026-10-28: Gate 2 and Gate 2b **null**. Layer 18, push limit 0.3 (measured on random directions; 0.6 from Phase 0 was too generous). Gate 2 (1-lead) fails for v_honesty and v_truth at 0.6 (primary) and 0.3 (post hoc), on the random control (random2 at −0.3: +26.6). 1-lead lying is mostly deference (true-lead 54% vs 6%). **Phase 2b** (neutral questions, `docs/phase2b_spec.md`): Gate 2b fails for v_honesty, v_truth and the new v_honesty_neutral. Every direction acts as a Yes ↔ No tilt: v_honesty "say No", v_honesty_neutral "say Yes", v_truth a strong Yes ↔ No dial. Spec §11, 2026-10-28 |
-| 3 Detection | not started |
+| 3 Detection | spec approved 2026-10-28 (`docs/phase3_spec.md`, short version); code not started |
 | 4 Geometry | not started |
 | 4.5 Scale check | optional, cut unless ahead |
 | 5 Outputs | not started |
@@ -59,12 +59,13 @@ Extract directions on the **extract** split, steer on the **eval** split, measur
 **Gate 2:** at least one direction moves the 1-lead lie rate roughly monotonically in α on held-out scenarios. If v_truth fails but v_honesty works, that is a *finding* (instrumental lying is a different feature), not a failure. If neither steers: write up the measurement and the null cleanly.
 **Result (2026-10-28): neither steers, on 1-lead (Gate 2) or on neutral questions (Gate 2b).** Both drop 1-lead lying by 34–49 points at 0.3, but a random direction moves it by 27, and the follow-ups show why: on leading questions "honest" means "No", and every direction we have is a Yes ↔ No tilt. Transfer question: v_truth does not steer lying; it tilts yes/no. Pictures A and B stay open for Phase 4. Write-up: the measurement, the controls and the null, with the Yes ↔ No finding.
 
-### 3 — Detection (twist 4)
+### 3 — Detection (twist 4) · spec: `docs/phase3_spec.md`
 Does the projection ⟨h_ℓ, v̂⟩ at the last prompt token, **before** the model answers, predict whether it will lie?
-- AUROC on held-out 1-lead scenarios, labels from the judge.
-- Compare three directions on two axes (detects best? steers best?): difference of means, logistic-regression probe, top PCA component.
-- Uses activations already computed in Phase 2; mostly sklearn, little GPU.
-**Output:** AUROC table; the reading-vs-writing comparison.
+- AUROC on held-out scenarios, six role levels, lie vs honest, computed within each level and averaged; labels from the cached judge.
+- Detectors at layer 18: v_honesty, v_honesty_neutral, v_truth, and a logistic-regression probe (hand-written in PyTorch, no sklearn).
+- Controls: a "shortcut detector" (planned answer word + "the true answer is no", combined) and 100 random directions. Gate 3: AUROC ≥ 0.7, beats the shortcut detector, beats random.
+- *Cut 2026-10-28 (short version):* steering with the new detectors, the PCA component, the all-layer curve, the hand check of negated questions (spec §8).
+**Output:** AUROC table and figure; the reading-vs-writing comparison.
 
 ### 4 — Geometry (twist 3)
 - Pairwise cosines among v_truth, v_honesty, v_syc (v_goal if extracted), **each against a random-direction baseline** (cosines of random unit vectors in R^d ~ N(0, 1/d)).

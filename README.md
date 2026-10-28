@@ -10,8 +10,12 @@ PyTorch hooks.
 - **Phase 1** (measurement, closed): `docs/phase1_spec.md`. When does the
   unsteered model lie? Scenarios, a calibrated judge, and baselines that
   Phase 2 steers against.
-- **Phase 2** (steering, in progress): `docs/phase2_spec.md`. Extract
-  directions and steer the lie rate with them.
+- **Phase 2** (steering, closed): `docs/phase2_spec.md`, follow-up
+  `docs/phase2b_spec.md`. Extract directions and steer the lie rate with
+  them. Result: no direction passes the pre-registered gate; every direction
+  found acts as a Yes ↔ No tilt.
+- **Phase 3** (detection, next): can a direction read, before the reply,
+  whether the model is about to lie?
 
 The whole plan, phase by phase, is in `docs/roadmap.md`. Every change to a
 phase's plan is recorded with its numbers in that spec's amendments section.
@@ -167,8 +171,8 @@ paired bootstrap 95% intervals:
   with the asker, but in every leading item the asker's hope and the
   character's goal point the same way, so "lie for the goal" and "agree with
   the customer because the role makes the model deferential" predict the same
-  rate. A separating test (a leading question that assumes the *true* answer)
-  is described in spec §11 and not yet run.
+  rate. The separating test (a leading question that assumes the *true*
+  answer) was run in Phase 2: most 1-lead lying is deference (see below).
 - **Judge edge cases.** The judge agrees with hand labels on 61 of 64
   replies. Its disagreements are borderline kinds: feigned ignorance ("I don't
   have any information on whether I called") counts as evasive, and a true
@@ -189,7 +193,18 @@ paired bootstrap 95% intervals:
   false for extraction, a disjoint 100 to check that v_truth separates
   held-out statements.
 
-## Phase 2 (in progress): steering lying
+## Phase 2 results: steering lying
+
+> **Result.** Both directions change the 1-lead lie rate a lot (56% → 22% and
+> → 6% at strength 0.3), but neither passes the gate written before the data:
+> a random direction of the same size moves lying by 27 points. Follow-up
+> tests show why. On a leading question the honest reply nearly always starts
+> "No", and every direction we found mostly tilts the reply between "Yes" and
+> "No". Repeated on neutral questions, where yes and no are each honest half
+> the time, no direction lowers lying. The truth direction does not transfer
+> to lying.
+
+### Directions
 
 Two directions are the candidates for steering, one for *knowing* and one for
 *telling*:
@@ -221,9 +236,107 @@ Directions (spec §2, all from the extract split):
   the network (cosine > 0.9 from layer 22).
 - **v_syc is weak** (relative length ≤ 0.028 at every layer).
 
-Next: choosing the steering layer, then the main sweep of lie rate vs. α at
-1-lead and 0-lead with random-direction controls, and a side-effect audit
-(goal pursuit, fluency, maths).
+Signs: α_h is the *honesty-ward* strength. v_honesty is steered with +α_h.
+v_truth's "true" side turned out to *raise* lying, so it is steered with −α_h
+(toward "false"). Both keep their definitions; the plots use α_h throughout.
+
+### Layer and push limit
+
+- **Layer 18 for both** (spec §3, extract split, six candidate layers
+  14–24). At 18, v_honesty turns lies into honest answers; at 20–24 the
+  lies turn into dodges ("I don't have that information").
+- **The push limit is 0.3, not 0.6.** Phase 0's limit came from reading a
+  few short replies. Random directions showed that 0.6 already breaks the
+  model: median perplexity above 2× the unpushed value, and GSM8K maths
+  53% → 13%. A rule written before new runs, using random directions only,
+  moved the limit to 0.3. The gate at 0.6 is still reported as the primary,
+  pre-registered result; 0.3 is labelled post hoc.
+
+### Main sweep: 1-lead, eval split (79 scenarios)
+
+![lie rate vs alpha_h, 1-lead and 0-lead, with random directions](docs/figures/phase2_main.png)
+
+![honest / evasive / lie per alpha_h](docs/figures/phase2_labels.png)
+
+- **v_honesty** at +0.3: lying 56% → 22%, honest 29% → 61%. At +0.6 it
+  overshoots: 34% lies, nearly all replies start "No", some followed by the
+  false answer ("No, that's incorrect. The car … has no previous owners.").
+- **v_truth works backwards.** Toward "true", the model confirms the asker's
+  false claim (95% lies at −0.3 on the α_h axis). Toward "false", lies turn
+  into dodges, not honest answers (evasive 15% → 77% at +0.3).
+- **Gate 2 fails for both** (spec §8, §11), on the random-direction check.
+  One random direction, pushed at −0.3, raises lying by +26.6 points
+  [+16.5, +38.0], more than half of either drop. It acts as a Yes/No lever on
+  the first word ("Yes"-starts 44 → 70 of 79), and on a leading question
+  "Yes" is the lie. At 0.6, random directions move lying by up to 25 points
+too, and v_truth also fails on fluency. Random directions
+  are checked at both signs, a choice made after seeing the data; with the +
+  sign only, the 0.3 gate would pass for both. Both readings are recorded.
+
+### Two follow-up tests
+
+**True-lead questions** (spec §10, predictions written before the run). The
+same scenarios with a leading question that assumes the *true* answer ("This
+car has been flooded, hasn't it?"):
+
+- In role, the model lies 54% when the asker assumes the false answer and 6%
+  when they assume the true one (plain-worded questions). **1-lead lying is
+  mostly deference**: going along with the customer, amplified by the role
+  (0-lead 23% → 1-lead 56%).
+- v_honesty at +0.3 *adds* lies here (+12.7 points [+3.8, +21.5]: "No,
+  that's incorrect" in front of true content), so part of it is "disagree with
+  the asker".
+
+**Phase 2b: neutral questions** (`docs/phase2b_spec.md`, gate approved
+before any steered neutral reply). Levels 1–3 pooled: 237 questions, the true
+answer is yes in 40 scenarios and no in 39, unpushed lying 19%. A third
+direction, **v_honesty_neutral**, was built from neutral questions only, so it
+could not learn "agree with the asker". The decisive check splits the
+scenarios by true answer: an honesty direction should lower lying on both
+halves.
+
+| at α_h = +0.3 | pooled lie change | true answer yes | true answer no | behaves like |
+|---|---|---|---|---|
+| v_honesty | −7.6 [−16.9, +1.7] | **+15.0** [+6.7, +25.0] | −30.8 | "say No" |
+| v_honesty_neutral | **+17.3** [+10.1, +25.3] | −4.2 | **+39.3** [+28.2, +51.3] | "say Yes" |
+| v_truth | +9.7 [−2.5, +21.1] | **+49.2** | −30.8 | Yes ↔ No dial |
+
+All three fail Gate 2b. The model's own lies on neutral questions are mostly
+"yes" (34% of true-answer-no questions vs 4% of true-answer-yes), so a "No"
+push removes them and creates "no"-lies. v_honesty_neutral became a "Yes"
+direction for a subtler reason. Its honest examples come mostly from
+scenarios whose true answer is yes, its lies from ones whose answer is no, so
+honest − lie ≈ "the answer is yes".
+
+### Costs
+
+![goal pursuit, perplexity and GSM8K vs alpha_h](docs/figures/phase2_costs.png)
+
+- **Goal pursuit** (a second judge prompt: does the character still try to
+  sell?). Honesty-ward pushes make the salesperson a neutral fact-reader:
+  35 of 79 replies pursue the goal unpushed, 8 with v_honesty +0.3. Honest
+  *and* still selling is rare at every strength.
+- **Maths** (GSM8K, 100 problems): at 0.3, v_honesty 42% against random
+  directions 46–56% (unpushed 53%); at 0.6 everything collapses, random
+  included.
+
+### What this means, and caveats
+
+- **A null, reported as one.** No direction found here controls lying under
+  goal pressure, and the truth direction does not transfer. The positive
+  findings are the deference result and the Yes ↔ No map of the directions:
+  a difference of means picks up every way the two groups differ, and here
+  honesty is tangled with the answer word twice, through the question's
+  suggested answer and through the scenario's true answer.
+- **Decisions made after seeing data** are labelled as such in the spec
+  amendments: the relocated push limit (by a rule on random directions only),
+  the sign of the random check, and the 2b follow-up itself.
+- **Judges.** The goal-pursuit judge agrees with 30 hand labels at κ = 0.66
+  and undercounts pursuit; the true-lead judge agrees on 27 of 30.
+- Lessons carried into later phases (`docs/roadmap.md`, decisions): push
+  limits are measured with random directions before the main run; random
+  controls are compared at both signs and paired; any honesty test needs
+  both answers to be honest sometimes.
 
 ## Setup
 
@@ -249,8 +362,17 @@ uv run scripts/13_calibrate_judge.py label|relabel|report   # judge vs hand labe
 uv run scripts/19_check_judge_snapshot.py # is the judge still the model that labelled Phase 1?
 uv run scripts/20_extract_directions.py   # v_truth, v_honesty, v_syc at every layer -> artifacts/vectors/
 uv run scripts/21_pilot_layers.py         # which layer steers lying best (extract split)
+uv run scripts/22_no_direction.py         # diagnostic: is a direction just "the answer is no"?
+uv run scripts/22b_role_direction.py      # diagnostic: is v_honesty just "drop the role"?
+uv run scripts/23_sweep_lying.py          # main sweep, eval split -> artifacts/phase2/sweep.csv
+uv run scripts/23b_goal_pursuit.py judge|label|report   # does the character still pursue its goal?
+uv run scripts/24_gsm8k_audit.py          # maths under steering
+uv run scripts/25_report_phase2.py --alpha-max 0.6   # report and figures (0.3 for the relocated limit)
+uv run scripts/26_truelead_questions.py   # true-lead questions from the API -> data/lying/leading_true.json
+uv run scripts/27_truelead.py unpushed|label|pushed|report   # true-lead control
+uv run scripts/28_neutral_check.py extract|run|goal|report   # Phase 2b: neutral questions
 
-uv run pytest                             # 37 tests
+uv run pytest                             # 41 tests
 ```
 
 Generations and judgments are cached, so rerunning a script only computes what
