@@ -33,6 +33,34 @@ def auroc(pos, neg):
     return float((p > n).mean() + 0.5 * (p == n).mean())
 
 
+def stratified_auroc(scores, positive, strata, min_per_side=5):
+    """Weighted mean of the AUROC within each stratum (Phase 3 spec §4).
+
+    scores[i] is item i's score, positive[i] its label (True = positive, e.g. a
+    lie), strata[i] its stratum (e.g. a level). Within stratum s, with n_P
+    positive and n_N negative items, the AUROC compares only items of s; the
+    strata are averaged with weights w_s = n_P n_N / (n_P + n_N), half the
+    harmonic mean of the two counts, as for v_honesty. A stratum with fewer
+    than min_per_side items on either side is skipped. Adding a constant to
+    every score of one stratum changes nothing.
+    """
+    scores = np.asarray(scores, dtype=float)
+    positive = np.asarray(positive, dtype=bool)
+    strata = np.asarray(strata)
+    total, weight_sum = 0.0, 0.0
+    for s in np.unique(strata):
+        here = strata == s  # boolean mask: True for the items of stratum s
+        pos, neg = scores[here & positive], scores[here & ~positive]
+        if min(len(pos), len(neg)) < min_per_side:
+            continue
+        w = len(pos) * len(neg) / (len(pos) + len(neg))
+        total += w * auroc(pos, neg)
+        weight_sum += w
+    if weight_sum == 0:
+        raise ValueError(f"no stratum has {min_per_side} items on both sides")
+    return total / weight_sum
+
+
 def paired_bootstrap(a, b, n_draws=2000, seed=config.SEED):
     """(mean, lo, hi): mean of a - b and its paired bootstrap 95% interval (Phase 2 spec §1).
 

@@ -13,7 +13,7 @@ import torch
 
 from trait_vectors import config
 from trait_vectors.hooks import steer
-from trait_vectors.metrics import auroc, paired_bootstrap, summarize
+from trait_vectors.metrics import auroc, paired_bootstrap, stratified_auroc, summarize
 from trait_vectors.model import generate, load_model, reply_perplexity, steering_spec
 from trait_vectors.traits.base import Score, split_by_id
 from trait_vectors.traits.sentiment import EVAL_PROMPTS, SentimentTrait
@@ -59,6 +59,28 @@ def test_auroc():
     assert auroc([1, 2], [3, 4]) == 0.0      # every pos below
     assert auroc([1, 3], [2]) == 0.5         # one pair above, one below
     assert auroc([1], [1]) == 0.5            # a tie counts half
+
+
+def test_stratified_auroc():
+    """Hand-computed (Phase 3 spec §4).
+
+    Stratum a: positives 4, 2; negatives 1, 3. Pairs 4>1, 4>3, 2>1, 2<3: AUROC 3/4, weight 2·2/4 = 1.
+    Stratum b: positive 5; negatives 6, 6, 0. Only 5>0: AUROC 1/3, weight 1·3/4 = 3/4.
+    Weighted mean: (1·3/4 + 3/4·1/3) / (1 + 3/4) = 4/7.
+    """
+    scores = [4, 2, 1, 3, 5, 6, 6, 0]
+    positive = [True, True, False, False, True, False, False, False]
+    strata = ["a", "a", "a", "a", "b", "b", "b", "b"]
+    assert stratified_auroc(scores, positive, strata, min_per_side=1) == pytest.approx(4 / 7)
+    assert auroc([4, 2, 5], [1, 3, 6, 6, 0]) == pytest.approx(8 / 15)  # pooled, for contrast
+    # Shifting one stratum's scores changes the pooled AUROC (to 6/15) but not the stratified one.
+    shifted = scores[:4] + [s + 100 for s in scores[4:]]
+    assert auroc([4, 2, 105], [1, 3, 106, 106, 100]) == pytest.approx(6 / 15)
+    assert stratified_auroc(shifted, positive, strata, min_per_side=1) == pytest.approx(4 / 7)
+    # min_per_side=2 skips stratum b (one positive), leaving a alone.
+    assert stratified_auroc(scores, positive, strata, min_per_side=2) == pytest.approx(3 / 4)
+    with pytest.raises(ValueError):
+        stratified_auroc(scores, positive, strata, min_per_side=3)
 
 
 def test_paired_bootstrap():

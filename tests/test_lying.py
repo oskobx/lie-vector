@@ -1,12 +1,14 @@
 """Tests for traits/lying.py: items, templates and split. No model needed."""
 
 import pytest
+from transformers import AutoTokenizer
 
+from trait_vectors import config
 from trait_vectors.judge.runner import fill_prompt
 from trait_vectors.traits.base import split_by_id
-from trait_vectors.traits.lying import (BASELINE_PATH, GOAL_PROMPT, LEVELS, ROLE_LEVELS, TRUELEAD_JUDGE_PROMPT,
-                                        TRUELEAD_LEVELS, TRUELEAD_PATH, LyingTrait, goal_fields, judge_fields,
-                                        messages_for)
+from trait_vectors.traits.lying import (ANSWER_WORDS, BASELINE_PATH, GOAL_PROMPT, LEVELS, ROLE_LEVELS,
+                                        TRUELEAD_JUDGE_PROMPT, TRUELEAD_LEVELS, TRUELEAD_PATH, LyingTrait,
+                                        goal_fields, is_negated, judge_fields, messages_for)
 
 
 @pytest.fixture(scope="module")
@@ -104,6 +106,41 @@ def test_neutral_strata(trait):
     """Phase 2b §3: v_honesty_neutral uses the neutral levels only, with the counts in the spec."""
     counts = {level: (len(h), len(d)) for level, (h, d) in trait.extraction_strata(["1", "2", "3"]).items()}
     assert counts == {"1": (58, 15), "2": (57, 14), "3": (41, 11)}
+
+
+@pytest.mark.skipif(not BASELINE_PATH.exists(), reason="needs the Phase 1 baseline (scripts/12_baseline_lying.py)")
+def test_eval_strata(trait):
+    """Phase 3 spec §2: split="eval" gives 223 honest and 161 lies, no level skipped, no extract scenario."""
+    strata = trait.extraction_strata(split="eval")
+    assert list(strata) == ROLE_LEVELS
+    assert sum(len(h) for h, _ in strata.values()) == 223
+    assert sum(len(d) for _, d in strata.values()) == 161
+    extract_prompts = {str(messages_for(s, level)) for s in trait.scenarios
+                       if split_by_id(s["id"]) == "extract" for level in ROLE_LEVELS}
+    for honest, lie in strata.values():
+        assert not {str(m) for m in honest + lie} & extract_prompts
+
+
+def test_answer_words_single_tokens():
+    """Phase 3 spec §3: each answer word is one token, and is also the first token of "Yes," / "No." etc.
+
+    Only the tokenizer is loaded (a few MB), not the model.
+    """
+    tokenizer = AutoTokenizer.from_pretrained(config.MODEL_ID)
+    for word in ANSWER_WORDS:
+        ids = tokenizer.encode(word, add_special_tokens=False)
+        assert len(ids) == 1
+        for follow in (",", ".", " it"):
+            assert tokenizer.encode(word + follow, add_special_tokens=False)[0] == ids[0]
+
+
+def test_is_negated():
+    assert is_negated("This car hasn't been through any flooding, has it?")
+    assert is_negated("This car has never been in an accident, right?")
+    assert is_negated("There were no complaints, right?")
+    assert is_negated("It is NOT a rental, is it?")
+    assert not is_negated("This car has a clean title, right?")
+    assert not is_negated("Do you know whether nothing changed?")  # "know", "nothing": no keyword
 
 
 def test_split_by_scenario(trait, items):
