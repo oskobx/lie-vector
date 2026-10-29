@@ -2,7 +2,7 @@
 
 The whole project on one page: what each phase is for, what it takes in and hands on, and the decisions already made that later phases must respect. Each phase still gets its own detailed spec (`docs/phaseN_spec.md`) before it starts; this file is the map, the spec is the instructions. When they disagree, the current phase spec wins, and this file gets updated.
 
-Last updated: 2026-10-28 (Gate 2 and Gate 2b decided: null; Phase 2 close-out).
+Last updated: 2026-10-28 (Gate 3 decided: passes for v_honesty and the probe, with the shortcut caveat).
 
 ## Research question
 
@@ -26,7 +26,7 @@ The answer may be in between; the Phase 4 span test quantifies how much of v_hon
 | 0 Plumbing | closed 2026-10-01 |
 | 1 Measurement | closed 2026-10-24 (Gate 1 passed: 1-lead 56%, κ 0.92, self-κ 0.94) |
 | 2 Steering | closed 2026-10-28: Gate 2 and Gate 2b **null**. Layer 18, push limit 0.3 (measured on random directions; 0.6 from Phase 0 was too generous). Gate 2 (1-lead) fails for v_honesty and v_truth at 0.6 (primary) and 0.3 (post hoc), on the random control (random2 at −0.3: +26.6). 1-lead lying is mostly deference (true-lead 54% vs 6%). **Phase 2b** (neutral questions, `docs/phase2b_spec.md`): Gate 2b fails for v_honesty, v_truth and the new v_honesty_neutral. Every direction acts as a Yes ↔ No tilt: v_honesty "say No", v_honesty_neutral "say Yes", v_truth a strong Yes ↔ No dial. Spec §11, 2026-10-28 |
-| 3 Detection | spec approved 2026-10-28 (`docs/phase3_spec.md`, short version); code not started |
+| 3 Detection | Gate 3 decided 2026-10-28: **passes for v_honesty (0.814) and the probe (0.778), with the shortcut caveat**; v_truth and v_honesty_neutral fail. The shortcut detector had to be refitted per level after eval was scored (spec §9); its margin comes from neutral questions, and among "Yes" replies the fact alone does better. Close-out pending |
 | 4 Geometry | not started |
 | 4.5 Scale check | optional, cut unless ahead |
 | 5 Outputs | not started |
@@ -66,6 +66,22 @@ Does the projection ⟨h_ℓ, v̂⟩ at the last prompt token, **before** the mo
 - Controls: a "shortcut detector" (planned answer word + "the true answer is no", combined) and 100 random directions. Gate 3: AUROC ≥ 0.7, beats the shortcut detector, beats random.
 - *Cut 2026-10-28 (short version):* steering with the new detectors, the PCA component, the all-layer curve, the hand check of negated questions (spec §8).
 **Output:** AUROC table and figure; the reading-vs-writing comparison.
+**Result (2026-10-28): Gate 3 passes for v_honesty and the probe, with the shortcut caveat** (spec §9).
+
+| | stratified AUROC, eval | minus per-level shortcut detector |
+|---|---|---|
+| v_honesty | 0.814 [0.734, 0.882] | +0.138 [+0.064, +0.206] |
+| probe | 0.778 [0.682, 0.864] | +0.102 [+0.020, +0.189] |
+| v_honesty_neutral | 0.697 (fails) | |
+| v_truth | 0.648 (fails) | |
+
+Random directions: 95th percentile 0.679. The shortcut detector reaches 0.676 refitted per level; as specified it scored 0.335.
+
+Reading:
+- **Reading and writing come apart.** v_honesty reads lying before the reply but does not steer it (Phase 2).
+- **No support for picture A.** v_truth does not read lying beyond the shortcuts.
+- **The caveat.** The as-specified shortcut detector was broken: the fact-reader's sign flips between neutral and leading questions. Its per-level refit was decided after eval was scored, and it is still under strength at the neutral levels. On leading questions the planned word alone reads lies as well as v_honesty does. Among "Yes" replies on neutral questions the fact alone does better (0.91 vs 0.78).
+- **Defensible claim:** v_honesty carries lie information beyond the planned word on neutral questions. Whether it is more than "the true answer is no" is open; Phase 4 can measure v_honesty against d_fact.
 
 ### 4 — Geometry (twist 3)
 - Pairwise cosines among v_truth, v_honesty, v_syc (v_goal if extracted), **each against a random-direction baseline** (cosines of random unit vectors in R^d ~ N(0, 1/d)).
@@ -98,6 +114,9 @@ Rerun Phases 1–3 unchanged on Qwen2.5-3B overnight. First thing to cut.
 - **Random-direction controls are checked at both signs** (Phase 2 spec §11, 2026-10-27): a random direction's sign is arbitrary, so "no random direction moves the metric by more than X" means at +α and −α. Phase 2 chose this after seeing the data; later phases fix it in their specs before running.
 - **An honesty test needs both answers to be honest sometimes** (Phase 2b, 2026-10-27). On leading questions the honest reply is nearly always "No", so a "say No / disagree" direction looks like honesty. Any later test of honesty (steering in Phase 3's "does it also steer?", Phase 4's comparisons) uses neutral questions balanced between true-answer yes and no, or reports the two halves separately. Phase 2's 1-lead lying is mostly deference to the asker (true-lead P2); neutral-question lies are the goal-driven kind.
 - **Random controls compare paired, not by a fraction of the effect** (Phase 2b §5): "the direction beats each random direction at ±α, paired interval below 0". Phase 2's "no random direction moves the metric by more than half the drop" fails small effects on noise alone.
+- **A control must be fitted the way it is scored** (Phase 3 spec §9, 2026-10-28). The pooled shortcut detector was scored by a within-level AUROC, learned the between-level lie rates instead, and came out below guessing. Any fitted control is checked on the extract split, by cross-validation against its own features alone, before the eval split is scored.
+- **The shortcuts flip between question types** (Phase 3). On neutral questions "the true answer is no" goes with lying; on leading questions "the true answer is yes" does. Any later reading or comparison involving the fact (Phase 4: v_honesty against d_fact) reports neutral and leading questions separately.
+- **Phase 4 inherits from Phase 3:** d_fact (level 0, extract; AUROC 1.0 for the true answer on eval level 0), the probe's w, and the open question whether v_honesty's reading is more than "the true answer is no". All are in `artifacts/phase3/detectors.pt`.
 
 ## Cut order if behind
 

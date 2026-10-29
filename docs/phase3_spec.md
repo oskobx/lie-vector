@@ -98,3 +98,53 @@ Session 1: code, tests, states. Session 2: report, Gate 3, close.
 ## 9. Amendments
 
 *(dated entries)*
+
+**2026-10-28, before any detection number (agreed with Oskar).** Four points the spec left open, found when the states were counted (no detector had been fitted or scored):
+
+1. *Cross-validation scoring (§3).* Within one held-out fold (16 scenarios) almost no level has 5 replies on each side, so a per-fold stratified AUROC is undefined under §4's rule. Instead each extract prompt is scored by the model fitted without its fold, and one stratified AUROC is computed over all extract prompts (out-of-fold predictions). Folds: extract scenario ids shuffled with `config.SEED`, dealt into 5. A tie in λ goes to the larger λ. Level centring uses the training folds' level means.
+2. *λ of the shortcut detector (§3).* Chosen like the probe's: same grid, same 5-fold cross-validation. d_fact (from level-0 prompts, which are never scored) is computed once on the extract split.
+3. *"Starts with No" (§6).* No level has 5 lies (eval: 11 lies over six levels), so this subset gets one AUROC pooled over levels, labelled "pooled, not stratified; too few to judge". The "starts with Yes" subset is stratified as usual; only levels 1, 2, 3 have ≥ 5 honest replies there, so it covers the neutral levels only.
+4. *"Without negated leading questions" (§6).* Drops the -lead prompts of flagged scenarios; their neutral-level prompts never contain the leading question and stay.
+
+Also fixed here: §6's evasive means are computed after subtracting each level's mean score (honest and lie prompts), since evasive replies concentrate at levels 3 and 3-lead; reported with their position on the honest (0) → lie (1) scale.
+
+**2026-10-28, AFTER the eval split was scored (agreed with Oskar): the shortcut detector is fitted per level.** The §3 shortcut detector (one logistic regression on the two features, all levels pooled, "no level centring needed") does not work as a control. It scored 0.335 on eval, below guessing and below the word-reader alone (0.668), so criterion 2 was passed by every detector. The defect is visible on the extract split alone: 0.562 in-sample and 0.51 cross-validated, against 0.623 for the word-reader alone. Cause, also on extract: the fact-reader's sign flips between level types. On neutral levels "true answer no" goes with lying (AUROC 0.51–0.57). On -lead levels nearly every honest reply has true answer no (1-lead: 10 of 12), so "true answer yes" predicts lying (AUROC 0.10–0.14, i.e. 0.86–0.90 reversed). One pooled weight per feature cannot follow this; the pooled fit mostly learns the between-level lie rates (0.2 vs 0.8), which the stratified AUROC ignores.
+
+- *Change:* the shortcut detector is a separate two-feature logistic regression within each level, extract split only, λ by the same 5-fold cross-validation (out-of-fold scores, §9.1). It is "the best both shortcuts can do together" for a stratified AUROC.
+- *Status:* the as-specified Gate 3 stays on record, marked "criterion 2 vacuous: control broken". The per-level version is labelled post hoc, decided after eval was scored, and the Phase 3 reading rests on it.
+- *What had been seen first* (said so in advance; the fix could cut either way): at -lead levels the word-reader alone was at v_honesty's level (0.94 / 0.93 / 0.86 vs 0.90 / 0.90 / 0.76). Among "Yes"-starting replies the fact-reader alone (0.909) was above every detector.
+- *Also noted:* one scenario per split has only evasive replies at all six role levels, so it contributes no prompts; the bootstrap resamples 78 eval scenarios, not 79.
+
+**2026-10-28, Gate 3 decision (Oskar): passes for v_honesty and the probe, with the shortcut caveat.**
+
+Eval split, layer 18; 78 scenarios, 223 honest, 161 lies; stratified AUROC with paired bootstrap 95% intervals. Random directions, max(A, 1 − A): median 0.573, 95th percentile 0.679, max 0.765.
+
+| detector | AUROC | minus per-level shortcut (paired) | 1 | 2 | 3 | |
+|---|---|---|---|---|---|---|
+| v_honesty | 0.814 [0.734, 0.882] | +0.138 [+0.064, +0.206] | ✓ | ✓ | ✓ | **passes** |
+| v_honesty_neutral | 0.697 [0.602, 0.789] | +0.021 [−0.088, +0.126] | ✗ | ✗ | ✓ | fails |
+| v_truth | 0.648 [0.561, 0.737] | −0.028 [−0.098, +0.047] | ✗ | ✗ | ✗ | fails |
+| probe (λ = 0.1 by CV) | 0.778 [0.682, 0.864] | +0.102 [+0.020, +0.189] | ✓ | ✓ | ✓ | **passes** |
+| shortcut detector, per level | 0.676 [0.605, 0.742] | | | | | control |
+| shortcut detector as specified | 0.335 [0.257, 0.410] | | | | | broken |
+
+As specified (pooled shortcut, criterion 2 vacuous) the same two pass.
+
+**Reading (§5 table):** a Phase 2 direction passes. v_honesty **reads** lying before the reply though it does not **steer** it (Phase 2): reading and writing come apart. v_truth fails, so there is no evidence for picture A. The probe passes but does not beat v_honesty.
+
+**The shortcut caveat:**
+1. *The control is under strength.* The per-level shortcut detector is fitted on about 15 lies per neutral level. On extract it barely beats the word-reader alone (cross-validated 0.628 vs 0.623). On eval it falls below the fact-reader alone at the neutral levels (0.49 / 0.41 / 0.58 vs 0.64). A stronger two-shortcut detector would narrow v_honesty's margin.
+2. *Where v_honesty's margin comes from.* At every -lead level the word-reader alone is ahead of v_honesty (0.94 / 0.93 / 0.86 vs 0.90 / 0.90 / 0.76), so the margin comes from the neutral levels. Even there, among replies starting "Yes", the fact-reader alone (0.909) is above v_honesty (0.782).
+
+So the defensible claim is narrower: before the reply, v_honesty carries lie information beyond the planned word on neutral questions. Whether that is more than "the true answer is no" is not settled here.
+
+**Also reported (§6):**
+- Without the -lead prompts of negated questions, v_honesty is 0.815 (no change).
+- Evasive replies sit at +0.09 on the honest → lie scale for v_honesty and +0.93 for v_honesty_neutral.
+- v_truth is reversed among "Yes" replies (0.25), consistent with a Yes/agree dial.
+
+**Proposed, not run:**
+- a per-level "AND" shortcut (word, fact, word × fact), or a fresh pre-registered test, for the open question above;
+- in Phase 4, the geometry of v_honesty against d_fact and the word-reader direction.
+
+Outputs: `artifacts/phase3/report.txt`, `detectors.pt`; `docs/figures/phase3_detection.png`.
